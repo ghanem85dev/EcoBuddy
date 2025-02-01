@@ -7,7 +7,7 @@ import "./App.css";
 const App = () => {
   return (
     <div className="dashboard">
-      <h1>Tableau de bord énergétique</h1>
+      <h2>Tableau de bord énergétique</h2>
       <RealTimeConsumption />
       <DevicesDetected />
       <Gamification />
