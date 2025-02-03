@@ -1,17 +1,47 @@
 import React from "react";
-import RealTimeConsumption from "./components/RealTimeConsumption";
-import DevicesDetected from "./components/DevicesDetected";
-import Gamification from "./components/Gamification";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/NavBar";
+import Sidebar from "./components/SideBar";
+import Home from "./pages/HomePage";
+import Login from "./pages/LoginPage";
+import ParticulierDashboard from "./pages/ParticulierDashboardPage";
+import ProDashboard from "./pages/DashboardPage";
+import CollectiviteDashboard from "./pages/CollectiviteDashboardPage";
+import ProtectedRoutes from "./routes/ProtectedRoutes";
+import Marketplace from "./pages/MarketplacePage";
+import Settings from "./pages/SettingsPage";
+import Register from "./pages/RegisterPage";
 import "./App.css";
 
 const App = () => {
   return (
-    <div className="dashboard">
-      <h2>Tableau de bord énergétique</h2>
-      <RealTimeConsumption />
-      <DevicesDetected />
-      <Gamification />
-    </div>
+    <Router>
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1">
+          <Navbar />
+          <Routes>
+            {/* Routes accessibles sans protection */}
+            <Route path="/" element={<Home />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Routes protégées avec des rôles */}
+            <Route element={<ProtectedRoutes allowedRoles={["particulier"]} />}>
+              <Route path="/particulier" element={<ParticulierDashboard />} />
+            </Route>
+            <Route element={<ProtectedRoutes allowedRoles={["professionnel"]} />}>
+              <Route path="/professionnel" element={<ProDashboard />} />
+            </Route>
+            <Route element={<ProtectedRoutes allowedRoles={["collectivite"]} />}>
+              <Route path="/collectivite" element={<CollectiviteDashboard />} />
+            </Route>
+          </Routes>
+        </div>
+      </div>
+    </Router>
   );
 };
 
