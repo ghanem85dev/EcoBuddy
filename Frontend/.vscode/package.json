@@ -3,16 +3,25 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+<<<<<<< HEAD:Frontend/.vscode/package.json
     "@react-oauth/google": "^0.12.1",
+=======
+>>>>>>> 93ad9a3 (home page):.vscode/package.json
     "autoprefixer": "^9.8.8",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "cra-template": "1.2.0",
     "energy-dashboard": "file:",
     "jwt-decode": "^4.0.0",
+<<<<<<< HEAD:Frontend/.vscode/package.json
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.3.1",
+=======
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+>>>>>>> 93ad9a3 (home page):.vscode/package.json
     "react-router-dom": "^6.29.0",
     "react-scripts": "^5.0.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",

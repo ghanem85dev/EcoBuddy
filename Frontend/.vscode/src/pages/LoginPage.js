@@ -2,7 +2,10 @@ import React, { useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
 import { GoogleLogin } from "@react-oauth/google"; // Importation du composant GoogleLogin
+=======
+>>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -29,6 +32,7 @@ const Login = () => {
     }
   };
 
+<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
   // Fonction pour gérer la connexion Google
   const handleGoogleLogin = async (response) => {
     try {
@@ -59,6 +63,8 @@ const Login = () => {
   
 
   
+=======
+>>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
   return (
     <div className="p-6">
       <h2 className="text-3xl font-semibold mb-6">Connexion</h2>
@@ -81,6 +87,7 @@ const Login = () => {
           Se connecter
         </button>
         <p className="mt-4">
+<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
           Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
         </p>
       </form>
@@ -94,8 +101,17 @@ const Login = () => {
           onError={(error) => console.log("Erreur de connexion Google :", error)}
         />
       </div>
+=======
+  Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
+</p>
+      </form>
+>>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
     </div>
   );
 };
 
+<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
 export default Login;
+=======
+export default Login;
+>>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
