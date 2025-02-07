@@ -1,76 +1,59 @@
 import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
+import axios from "axios";
+import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend } from "chart.js";
+
+// Register the necessary components for chart.js
+ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,  // Register PointElement for displaying points on the line chart
   Title,
   Tooltip,
   Legend
-} from "chart.js";
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
+);
 const RealTimeConsumption = () => {
-  const [consumptionData, setConsumptionData] = useState({
-    labels: ["12:00", "12:15", "12:30", "12:45", "13:00"],
-    data: [5, 6, 4, 8, 7],
-  });
-
-  const [keyIndicators, setKeyIndicators] = useState({
-    consumedKwh: "--",
-    estimatedCost: "--",
+  const [data, setData] = useState({
+    labels: [],
+    values: [],
   });
 
   useEffect(() => {
-    // Simule la récupération des données d'une API
-    setKeyIndicators({
-      consumedKwh: 25.6,
-      estimatedCost: 3.45,
-    });
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("/api/consumption");
+        setData({
+          labels: response.data.timestamps,
+          values: response.data.values,
+        });
+      } catch (error) {
+        console.error("Erreur API :", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const chartData = {
-    labels: consumptionData.labels,
-    datasets: [
-      {
-        label: "Consommation (kWh)",
-        data: consumptionData.data,
-        borderColor: "blue",
-        backgroundColor: "rgba(0, 0, 255, 0.2)", // Pour un effet plus visible
-        fill: true, // Remplissage sous la ligne
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      title: {
-        display: true,
-        text: "Consommation d'énergie en temps réel",
-      },
-      legend: {
-        display: true,
-      },
-    },
-    scales: {
-      x: { title: { display: true, text: "Temps" } },
-      y: { title: { display: true, text: "kWh" } },
-    },
-  };
-
   return (
-    <section className="real-time-consumption">
-      <h2>Consommation en temps réel</h2>
-      <Line data={chartData} options={chartOptions} />
-      <div className="key-indicators">
-        <p><strong>kWh consommés :</strong> {keyIndicators.consumedKwh}</p>
-        <p><strong>Coût estimé :</strong> {keyIndicators.estimatedCost} €</p>
-      </div>
-    </section>
+    <div className="bg-white p-4 shadow-md rounded-lg">
+      <h3 className="text-xl font-semibold">Consommation en Temps Réel</h3>
+      <Line
+        data={{
+          labels: data.labels,
+          datasets: [
+            {
+              label: "Consommation (kWh)",
+              data: data.values,
+              borderColor: "blue",
+              fill: false,
+            },
+          ],
+        }}
+      />
+    </div>
   );
 };
 

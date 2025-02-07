@@ -1,25 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 const Gamification = () => {
-  const [points, setPoints] = useState("--");
-
-  useEffect(() => {
-    // Simulate fetching data from an API
-    setPoints(1500);
-  }, []);
+  const [points, setPoints] = useState(1500);
 
   return (
-    <section className="gamification">
-      <h2>Gamification</h2>
-      <div className="points-widget">
-        <p><strong>Points accumulés :</strong> {points}</p>
+    <div className="bg-white p-4 shadow-md rounded-lg">
+      <h3 className="text-xl font-semibold">Gamification</h3>
+      <p>Points accumulés : <strong>{points}</strong></p>
+      <div className="progress-bar bg-gray-300 h-4 rounded-full mt-2">
+        <div className="progress bg-green-500 h-4 rounded-full" style={{ width: `${(points / 2000) * 100}%` }}></div>
       </div>
-      <div className="badges-grid">
-        <div className="badge locked">🔒</div>
-        <div className="badge unlocked">⭐</div>
-        <div className="badge locked">🔒</div>
-      </div>
-    </section>
+      <p className="mt-2">{(points / 2000) * 100}% vers le prochain badge</p>
+    </div>
   );
 };
 
