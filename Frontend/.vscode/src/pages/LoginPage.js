@@ -2,10 +2,7 @@ import React, { useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
 import { GoogleLogin } from "@react-oauth/google"; // Importation du composant GoogleLogin
-=======
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,7 +15,7 @@ const Login = () => {
     try {
       const response = await axios.post("http://localhost:8000/auth/login", { email, password });
       login(response.data.access_token);
-
+      alert("Connexion réussie !");
       // Redirection selon le rôle
       if (response.data.role === "particulier") {
         navigate("/particulier");
@@ -32,39 +29,38 @@ const Login = () => {
     }
   };
 
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
   // Fonction pour gérer la connexion Google
-  const handleGoogleLogin = async (response) => {
-    try {
-      console.log(response);
-      if (response?.credential) {
-        const googleResponse = await axios.post("http://localhost:8000/auth/callback", {
-          code: response.credential, // Send the authorization code instead of the token
-        });
-  
-        login(googleResponse.data.access_token); // Store the JWT token
-  
-        // Redirect based on the role
-        if (googleResponse.data.role === "particulier") {
-          navigate("/particulier");
-        } else if (googleResponse.data.role === "professionnel") {
-          navigate("/professionnel");
-        } else if (googleResponse.data.role === "collectivite") {
-          navigate("/collectivite");
-        }
-      } else {
-        throw new Error("No authorization code returned from Google");
-      }
-    } catch (error) {
-      alert("Erreur de connexion avec Google !");
-      console.error(error);
-    }
-  };
-  
+  const handleSuccess = (response) => {
+    const id_token = response.credential;
 
-  
-=======
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
+    // Envoyer le token à l'API backend
+    fetch('http://localhost:8000/auth/google-login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id_token }),
+      credentials: 'include' // Permet d'envoyer et recevoir des cookies
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.access_token) {
+        login(data.access_token);
+        alert("Connexion réussie !");
+        navigate(`/${data.role}`);
+      } else {
+        alert("Veuillez créer un compte !");
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  };
+
+  const handleFailure = (error) => {
+    console.error("Google Sign In failed:", error);
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-3xl font-semibold mb-6">Connexion</h2>
@@ -87,31 +83,20 @@ const Login = () => {
           Se connecter
         </button>
         <p className="mt-4">
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
           Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
         </p>
       </form>
 
-      {/* Ajout du bouton de connexion Google */}
       <div className="mt-4">
         <GoogleLogin
-        clientId= "104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
-        buttonText="Login with Google"
-        onSuccess={handleGoogleLogin}
+          clientId="104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
+          buttonText="Se connecter avec Google"
+          onSuccess={handleSuccess}
           onError={(error) => console.log("Erreur de connexion Google :", error)}
         />
       </div>
-=======
-  Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
-</p>
-      </form>
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
     </div>
   );
 };
 
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
 export default Login;
-=======
-export default Login;
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
