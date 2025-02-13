@@ -1,12 +1,18 @@
 
+
 from google.auth.transport import requests as google_requests
+
 from pydantic import BaseModel
 import jwt
 import bcrypt
 from datetime import datetime, timedelta
 
+
 from google.oauth2 import id_token
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
+
+
+
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
@@ -15,7 +21,10 @@ from app.models import User
 import requests
 import os
 from dotenv import load_dotenv
-from fastapi import Form
+
+
+
+
 # Charger les variables d'environnement
 load_dotenv()
 
@@ -30,6 +39,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 
+
 router = APIRouter()
 class UserLogin(BaseModel):
     email: str
@@ -40,6 +50,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def get_db():
     db = SessionLocal()
@@ -118,14 +129,13 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 def google_login():
     """Retourne l'URL d'authentification de Google"""
     auth_url = (
-        "http://accounts.google.com/o/oauth2/auth"
+        "https://accounts.google.com/o/oauth2/auth"
         f"?client_id={GOOGLE_CLIENT_ID}"
         "&response_type=code"
         "&scope=openid%20email%20profile"
         f"&redirect_uri={REDIRECT_URI}"
     )
     return {"auth_url": auth_url}
-
 class GoogleLoginRequest(BaseModel):
     id_token: str 
    
@@ -185,3 +195,4 @@ def google_signup(request: GoogleLoginRequest, role: str, db: Session = Depends(
     except ValueError as e:
         print(f"Erreur de validation du token: {e}")
         raise HTTPException(status_code=400, detail="ID Token invalide")
+

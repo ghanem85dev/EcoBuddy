@@ -30,6 +30,7 @@ const Login = () => {
   };
 
   // Fonction pour gérer la connexion Google
+
   const handleSuccess = (response) => {
     const id_token = response.credential;
 
@@ -61,6 +62,7 @@ const Login = () => {
     console.error("Google Sign In failed:", error);
   };
 
+
   return (
     <div className="p-6">
       <h2 className="text-3xl font-semibold mb-6">Connexion</h2>
@@ -82,17 +84,20 @@ const Login = () => {
         <button className="bg-blue-500 text-white p-2 rounded w-full" type="submit">
           Se connecter
         </button>
-        
 
+      
+
+      {/* Ajout du bouton de connexion Google */}
       <div className="mt-4">
         <GoogleLogin
-          clientId="104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
-          buttonText="Se connecter avec Google"
-          onSuccess={handleSuccess}
+        clientId= "104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
+        buttonText="Login with Google"
+        onSuccess={handleGoogleLogin}
           onError={(error) => console.log("Erreur de connexion Google :", error)}
         />
       </div>
       <p className="mt-4">
+
           Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
         </p>
       </form>

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 
+
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,9 +44,11 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+ 
+
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+
     try {
       await axios.post("http://localhost:8000/auth/register", { email, password, role });
       alert("Inscription réussie !");
@@ -54,6 +57,7 @@ const Register = () => {
       alert("Erreur lors de l'inscription");
     }
   };
+
 
   const handleGoogleClick = () => {
     setShowRoleModal(true);
@@ -184,6 +188,7 @@ const Register = () => {
           </div>
         )}
       </div>
+
     </div>
   );
 };

@@ -1,27 +1,22 @@
-import React from "react"; 
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom"; 
-import Navbar from "./components/NavBar"; 
-import Sidebar from "./components/SideBar"; 
-import Home from "./pages/HomePage"; 
-import Login from "./pages/LoginPage"; 
-import ParticulierDashboard from "./pages/ParticulierDashboardPage"; 
-import ProDashboard from "./pages/DashboardPage"; 
-import CollectiviteDashboard from "./pages/CollectiviteDashboardPage"; 
-import ProtectedRoutes from "./routes/ProtectedRoutes"; 
-import Marketplace from "./pages/MarketplacePage"; 
-import Settings from "./pages/SettingsPage"; 
-import Register from "./pages/RegisterPage"; 
-import "./App.css"; 
+
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/NavBar";
+import Sidebar from "./components/SideBar";
+import Home from "./pages/HomePage";
+import Login from "./pages/LoginPage";
+import ParticulierDashboard from "./pages/ParticulierDashboardPage";
+import ProDashboard from "./pages/DashboardPage";
+import CollectiviteDashboard from "./pages/CollectiviteDashboardPage";
+import ProtectedRoutes from "./routes/ProtectedRoutes";
+import Marketplace from "./pages/MarketplacePage";
+import Settings from "./pages/SettingsPage";
+import Register from "./pages/RegisterPage";
+import "./App.css";
+
+
 
 const App = () => {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
-  );
-};
-
-const AppContent = () => {
   const location = useLocation(); // Utilisez useLocation ici, dans le contexte du Router
 
   // Vérifiez si l'utilisateur est sur /login ou /register
@@ -56,5 +51,6 @@ const AppContent = () => {
     </div>
   );
 };
+
 
 export default App;
