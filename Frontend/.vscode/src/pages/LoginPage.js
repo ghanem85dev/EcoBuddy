@@ -82,10 +82,7 @@ const Login = () => {
         <button className="bg-blue-500 text-white p-2 rounded w-full" type="submit">
           Se connecter
         </button>
-        <p className="mt-4">
-          Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
-        </p>
-      </form>
+        
 
       <div className="mt-4">
         <GoogleLogin
@@ -95,6 +92,10 @@ const Login = () => {
           onError={(error) => console.log("Erreur de connexion Google :", error)}
         />
       </div>
+      <p className="mt-4">
+          Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
+        </p>
+      </form>
     </div>
   );
 };
