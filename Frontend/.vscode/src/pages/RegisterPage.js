@@ -50,13 +50,32 @@ const Register = () => {
     e.preventDefault();
 
     try {
-      await axios.post("http://localhost:8000/auth/register", { email, password, role });
-      alert("Inscription réussie !");
-      navigate("/login");
+        await axios.post("http://localhost:8000/auth/register", {
+            email,
+            password,
+            role
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        alert("Inscription réussie !");
+        navigate("/login");
     } catch (error) {
-      alert("Erreur lors de l'inscription");
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            alert("Erreur lors de l'inscription: " + error.response.data.detail);
+        } else if (error.request) {
+            // The request was made but no response was received
+            alert("Erreur lors de l'inscription: Aucun réponse du serveur.");
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            alert("Erreur lors de l'inscription: " + error.message);
+        }
+        console.error("Error:", error);
     }
-  };
+};
 
 
   const handleGoogleClick = () => {

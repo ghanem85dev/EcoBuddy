@@ -85,6 +85,8 @@ const Login = () => {
           Se connecter
         </button>
 
+        
+
       
 
       {/* Ajout du bouton de connexion Google */}
@@ -92,7 +94,7 @@ const Login = () => {
         <GoogleLogin
         clientId= "104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
         buttonText="Login with Google"
-        onSuccess={handleGoogleLogin}
+        onSuccess={handleSuccess}
           onError={(error) => console.log("Erreur de connexion Google :", error)}
         />
       </div>
