@@ -51,7 +51,11 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-lg">
-        <h3 className="text-2xl font-bold text-center text-gray-900">Se connecter</h3>
+      <h3 className="text-3xl font-semibold text-center text-orange-600 drop-shadow-md font-serif">
+  Se connecter
+</h3>
+
+
         <p className="text-sm text-center text-gray-600">Veuillez saisir vos identifiants pour accéder à votre compte</p>
         <GoogleLogin onSuccess={handleSuccess} onError={() => console.error("Erreur de connexion Google")} />
         <div className="flex items-center my-3">
@@ -65,7 +69,7 @@ const Login = () => {
             <input
               id="email"
               type="email"
-              placeholder="mail@loopple.com"
+              placeholder="mail@gmail.com"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring focus:ring-indigo-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -73,11 +77,11 @@ const Login = () => {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password*</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
             <input
               id="password"
               type="password"
-              placeholder="Enter a password"
+              placeholder="Entrer votre mot de passe"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring focus:ring-indigo-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -85,22 +89,25 @@ const Login = () => {
             />
           </div>
           <div className="flex items-center justify-between">
-            <label className="flex items-center">
-              <input type="checkbox" className="w-4 h-4 text-indigo-600 border-gray-300 rounded" />
-              <span className="ml-2 text-sm text-gray-600">Keep me logged in</span>
-            </label>
-            <a href="#" className="text-sm text-indigo-600 hover:underline">Forget password?</a>
-          </div>
+  <label className="flex items-center">
+    <input type="checkbox" className="w-4 h-4 text-orange-600 border-gray-300 rounded" />
+    <span className="ml-2 text-sm text-gray-600">Rester connecté</span>
+  </label>
+  <a href="#" className="text-sm text-orange-600 hover:underline">Mot de passe oublié ?</a>
+</div>
+
           <button
-            className="w-full py-3 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-            type="submit"
-          >
-            Sign In
-          </button>
+  className="w-full py-3 text-white bg-orange-600 rounded-lg hover:bg-orange-700"
+  type="submit"
+>
+  Connexion
+</button>
+
         </form>
         <p className="text-sm text-center text-gray-600">
-          Not registered yet? <a href="/register" className="font-bold text-indigo-600 hover:underline">Create an Account</a>
-        </p>
+  Pas encore inscrit ? <a href="/register" className="font-bold text-orange-600 hover:underline">Créer un compte</a>
+</p>
+
       </div>
     </div>
   );
