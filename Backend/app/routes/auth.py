@@ -1,11 +1,18 @@
-from fastapi import FastAPI, Depends, HTTPException
+
+
+from google.auth.transport import requests as google_requests
+
 from pydantic import BaseModel
 import jwt
 import bcrypt
 from datetime import datetime, timedelta
 
 
-from fastapi import APIRouter
+from google.oauth2 import id_token
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
+
+
+
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
@@ -14,6 +21,9 @@ from app.models import User
 import requests
 import os
 from dotenv import load_dotenv
+
+
+
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -27,21 +37,8 @@ SECRET_KEY = "MY_SECRET_KEY"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-# Base de données simulée (à remplacer par PostgreSQL)
-users_db = {
-    "user1@example.com": {
-        "password": bcrypt.hashpw(b"password123", bcrypt.gensalt()).decode(),
-        "role": "particulier"
-    },
-    "admin@entreprise.com": {
-        "password": bcrypt.hashpw(b"adminpass", bcrypt.gensalt()).decode(),
-        "role": "professionnel"
-    },
-    "collectivite@hub.com": {
-        "password": bcrypt.hashpw(b"collectifpass", bcrypt.gensalt()).decode(),
-        "role": "collectivite"
-    }
-}
+
+
 
 router = APIRouter()
 class UserLogin(BaseModel):
@@ -54,18 +51,6 @@ def create_access_token(data: dict, expires_delta: timedelta):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# @app.post("/auth/login")
-# def login(user: UserLogin):
-#     if user.email not in users_db:
-#         raise HTTPException(status_code=400, detail="Utilisateur non trouvé")
-   
-#     stored_password = users_db[user.email]["password"]
-#     if not bcrypt.checkpw(user.password.encode(), stored_password.encode()):
-#         raise HTTPException(status_code=400, detail="Mot de passe incorrect")
-
-#     role = users_db[user.email]["role"]
-#     access_token = create_access_token({"sub": user.email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-#     return {"access_token": access_token, "role": role}
 
 def get_db():
     db = SessionLocal()
@@ -151,45 +136,63 @@ def google_login():
         f"&redirect_uri={REDIRECT_URI}"
     )
     return {"auth_url": auth_url}
+class GoogleLoginRequest(BaseModel):
+    id_token: str 
+   
+@router.post("/auth/google-login")
+def google_login(request: GoogleLoginRequest, db: Session = Depends(get_db)):
+    """Connexion avec Google (sans création de compte)"""
+    id_token_received = request.id_token
+    print(f"Token reçu: {id_token_received}")
 
-@router.post("/auth/callback")
-def google_callback(code: str, db: Session = Depends(get_db)):
-    """Gère la redirection et récupère le token d'accès"""
-    token_url = "https://oauth2.googleapis.com/token"
-    data = {
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
-        "code": code,
-        "grant_type": "authorization_code",
-        "redirect_uri": REDIRECT_URI,
-    }
-    response = requests.post(token_url, data=data)
-    if response.status_code != 200:
-        raise HTTPException(status_code=400, detail="Erreur d'authentification Google")
+    try:
+        google_user = id_token.verify_oauth2_token(id_token_received, google_requests.Request(), GOOGLE_CLIENT_ID)
+        email = google_user.get("email")
+        name = google_user.get("name")
+        print(f"Utilisateur Google: {email}, {name}")
 
-    tokens = response.json()
-    access_token = tokens.get("access_token")
+        # Vérifier si l'utilisateur existe
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Compte non trouvé. Inscrivez-vous d'abord.")
 
-    # Récupération des informations utilisateur
-    userinfo_url = "https://www.googleapis.com/oauth2/v2/userinfo"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    user_info_response = requests.get(userinfo_url, headers=headers)
+        # Générer un JWT
+        jwt_token = create_access_token({"sub": email, "role": user.role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        return {"access_token": jwt_token, "email": email, "name": name, "role": user.role}
 
-    if user_info_response.status_code != 200:
-        raise HTTPException(status_code=400, detail="Impossible de récupérer les infos utilisateur")
+    except ValueError as e:
+        print(f"Erreur de validation du token: {e}")
+        raise HTTPException(status_code=400, detail="ID Token invalide")
+    
+    
+    
+@router.post("/auth/google-signup")
+def google_signup(request: GoogleLoginRequest, role: str, db: Session = Depends(get_db)):
+    """Inscription avec Google (avec choix du rôle)"""
+    id_token_received = request.id_token
+    print(f"Token reçu: {id_token_received}")
 
-    user_info = user_info_response.json()
-    email = user_info.get("email")
-    name = user_info.get("name")
+    try:
+        google_user = id_token.verify_oauth2_token(id_token_received, google_requests.Request(), GOOGLE_CLIENT_ID)
+        email = google_user.get("email")
+        name = google_user.get("name")
+        print(f"Utilisateur Google: {email}, {name}, Rôle: {role}")
 
-    # Vérifier si l'utilisateur existe, sinon l'enregistrer
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(email=email, password="", role="particulier")  # Pas de mot de passe pour les comptes Google
-        db.add(user)
+        # Vérifier si l'utilisateur existe déjà
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            raise HTTPException(status_code=400, detail="Un compte existe déjà avec cet email.")
+
+        # Créer un nouvel utilisateur avec le rôle spécifié
+        new_user = User(email=email, password="", role=role)
+        db.add(new_user)
         db.commit()
 
-    # Générer un token JWT
-    jwt_token = create_access_token({"sub": email, "role": user.role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        # Générer un JWT
+        jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        return {"access_token": jwt_token, "email": email, "name": name, "role": role}
 
-    return {"access_token": jwt_token, "email": email, "name": name, "role": user.role}
+    except ValueError as e:
+        print(f"Erreur de validation du token: {e}")
+        raise HTTPException(status_code=400, detail="ID Token invalide")
+

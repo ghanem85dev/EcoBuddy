@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar";
@@ -12,37 +13,45 @@ import Marketplace from "./pages/MarketplacePage";
 import Settings from "./pages/SettingsPage";
 import Register from "./pages/RegisterPage";
 import "./App.css";
+import { useLocation } from "react-router-dom";
+
+
 
 const App = () => {
-  return (
-    <Router>
-      <div className="flex">
-        <Sidebar />
-        <div className="flex-1">
-          <Navbar />
-          <Routes>
-            {/* Routes accessibles sans protection */}
-            <Route path="/" element={<Home />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+  const location = useLocation(); // Utilisez useLocation ici, dans le contexte du Router
 
-            {/* Routes protégées avec des rôles */}
-            <Route element={<ProtectedRoutes allowedRoles={["particulier"]} />}>
-              <Route path="/particulier" element={<ParticulierDashboard />} />
-            </Route>
-            <Route element={<ProtectedRoutes allowedRoles={["professionnel"]} />}>
-              <Route path="/professionnel" element={<ProDashboard />} />
-            </Route>
-            <Route element={<ProtectedRoutes allowedRoles={["collectivite"]} />}>
-              <Route path="/collectivite" element={<CollectiviteDashboard />} />
-            </Route>
-          </Routes>
-        </div>
+  // Vérifiez si l'utilisateur est sur /login ou /register
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
+
+  return (
+    <div className="flex">
+      {/* Conditionally render Sidebar and Navbar based on the page */}
+      {!isAuthPage && <Sidebar />}
+      <div className="flex-1">
+        {!isAuthPage && <Navbar />}
+        <Routes>
+          {/* Routes accessibles sans protection */}
+          <Route path="/" element={<Home />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Routes protégées avec des rôles */}
+          <Route element={<ProtectedRoutes allowedRoles={["particulier"]} />}>
+            <Route path="/particulier" element={<ParticulierDashboard />} />
+          </Route>
+          <Route element={<ProtectedRoutes allowedRoles={["professionnel"]} />}>
+            <Route path="/professionnel" element={<ProDashboard />} />
+          </Route>
+          <Route element={<ProtectedRoutes allowedRoles={["collectivite"]} />}>
+            <Route path="/collectivite" element={<CollectiviteDashboard />} />
+          </Route>
+        </Routes>
       </div>
-    </Router>
+    </div>
   );
 };
+
 
 export default App;

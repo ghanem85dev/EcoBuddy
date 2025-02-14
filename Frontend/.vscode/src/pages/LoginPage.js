@@ -2,10 +2,7 @@ import React, { useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
-import { GoogleLogin } from "@react-oauth/google"; // Importation du composant GoogleLogin
-=======
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
+import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,100 +15,102 @@ const Login = () => {
     try {
       const response = await axios.post("http://localhost:8000/auth/login", { email, password });
       login(response.data.access_token);
-
-      // Redirection selon le rôle
-      if (response.data.role === "particulier") {
-        navigate("/particulier");
-      } else if (response.data.role === "professionnel") {
-        navigate("/professionnel");
-      } else if (response.data.role === "collectivite") {
-        navigate("/collectivite");
-      }
+      alert("Connexion réussie !");
+      navigate(`/${response.data.role}`);
     } catch (error) {
-      alert("Erreur de connexion !");
+      console.error("Erreur de connexion !", error);
+      alert("Erreur de connexion ! Veuillez vérifier vos identifiants.");
     }
   };
 
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
-  // Fonction pour gérer la connexion Google
-  const handleGoogleLogin = async (response) => {
-    try {
-      console.log(response);
-      if (response?.credential) {
-        const googleResponse = await axios.post("http://localhost:8000/auth/callback", {
-          code: response.credential, // Send the authorization code instead of the token
-        });
-  
-        login(googleResponse.data.access_token); // Store the JWT token
-  
-        // Redirect based on the role
-        if (googleResponse.data.role === "particulier") {
-          navigate("/particulier");
-        } else if (googleResponse.data.role === "professionnel") {
-          navigate("/professionnel");
-        } else if (googleResponse.data.role === "collectivite") {
-          navigate("/collectivite");
+  const handleSuccess = (response) => {
+    const id_token = response.credential;
+    fetch("http://localhost:8000/auth/google-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id_token }),
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.access_token) {
+          login(data.access_token);
+          alert("Connexion réussie !");
+          navigate(`/${data.role}`);
+        } else {
+          alert("Veuillez créer un compte !");
         }
-      } else {
-        throw new Error("No authorization code returned from Google");
-      }
-    } catch (error) {
-      alert("Erreur de connexion avec Google !");
-      console.error(error);
-    }
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la connexion Google:", error);
+      });
   };
-  
 
-  
-=======
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
   return (
-    <div className="p-6">
-      <h2 className="text-3xl font-semibold mb-6">Connexion</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          className="border p-2 mb-4 w-full"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          className="border p-2 mb-4 w-full"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button className="bg-blue-500 text-white p-2 rounded w-full" type="submit">
-          Se connecter
-        </button>
-        <p className="mt-4">
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
-          Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
-        </p>
-      </form>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-lg">
+      <h3 className="text-3xl font-semibold text-center text-orange-600 drop-shadow-md font-serif">
+  Se connecter
+</h3>
 
-      {/* Ajout du bouton de connexion Google */}
-      <div className="mt-4">
-        <GoogleLogin
-        clientId= "104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
-        buttonText="Login with Google"
-        onSuccess={handleGoogleLogin}
-          onError={(error) => console.log("Erreur de connexion Google :", error)}
-        />
-      </div>
-=======
-  Pas encore de compte ? <a href="/register" className="text-blue-500">Inscrivez-vous ici</a>
+
+        <p className="text-sm text-center text-gray-600">Veuillez saisir vos identifiants pour accéder à votre compte</p>
+        <GoogleLogin onSuccess={handleSuccess} onError={() => console.error("Erreur de connexion Google")} />
+        <div className="flex items-center my-3">
+          <hr className="w-full border-gray-300" />
+          <p className="px-3 text-gray-500">or</p>
+          <hr className="w-full border-gray-300" />
+        </div>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email*</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="mail@gmail.com"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring focus:ring-indigo-200"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Entrer votre mot de passe"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring focus:ring-indigo-200"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex items-center justify-between">
+  <label className="flex items-center">
+    <input type="checkbox" className="w-4 h-4 text-orange-600 border-gray-300 rounded" />
+    <span className="ml-2 text-sm text-gray-600">Rester connecté</span>
+  </label>
+  <a href="#" className="text-sm text-orange-600 hover:underline">Mot de passe oublié ?</a>
+</div>
+
+          <button
+  className="w-full py-3 text-white bg-orange-600 rounded-lg hover:bg-orange-700"
+  type="submit"
+>
+  Connexion
+</button>
+
+        </form>
+        <p className="text-sm text-center text-gray-600">
+  Pas encore inscrit ? <a href="/register" className="font-bold text-orange-600 hover:underline">Créer un compte</a>
 </p>
-      </form>
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
+
+      </div>
     </div>
   );
 };
 
-<<<<<<< HEAD:Frontend/.vscode/src/pages/LoginPage.js
 export default Login;
-=======
-export default Login;
->>>>>>> 93ad9a3 (home page):.vscode/src/pages/LoginPage.js
