@@ -84,7 +84,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    return {"access_token": access_token, "role": db_user.role}
+    return {"access_token": access_token, "role": db_user.role, "id":user.id}
 
 
 class UserCreate(BaseModel):
@@ -143,7 +143,7 @@ def google_login_endpoint(request: GoogleLoginRequest, db: Session = Depends(get
             raise HTTPException(status_code=404, detail="Compte non trouvé. Inscrivez-vous d'abord.")
 
         jwt_token = create_access_token({"sub": email, "role": user.role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        return {"access_token": jwt_token, "email": email, "name": name, "role": user.role}
+        return {"access_token": jwt_token, "email": email, "name": name, "role": user.role, "id":user.id}
 
     except ValueError as e:
         print(f"Erreur de validation du token: {e}")
@@ -171,7 +171,7 @@ def google_signup(request: GoogleLoginRequest, role: str, db: Session = Depends(
         db.commit()
 
         jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        return {"access_token": jwt_token, "email": email, "name": name, "role": role}
+        return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":user.id}
 
     except ValueError as e:
         print(f"Erreur de validation du token: {e}")
@@ -209,7 +209,7 @@ def facebook_login(request: FacebookLoginRequest, db: Session = Depends(get_db))
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    return {"access_token": jwt_token, "email": email, "name": name, "role": user.role}
+    return {"access_token": jwt_token, "email": email, "name": name, "role": user.role, "id":user.id}
 
 
 class FacebookSignupRequest(BaseModel):
@@ -244,7 +244,7 @@ def facebook_signup(request: FacebookSignupRequest, role: str, db: Session = Dep
     db.commit()
 
     jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    return {"access_token": jwt_token, "email": email, "name": name, "role": role}
+    return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":user.id}
 
 
 class PasswordResetRequest(BaseModel):

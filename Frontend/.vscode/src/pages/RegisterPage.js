@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { FaGoogle, FaFacebook } from "react-icons/fa"; // Importing Google and Facebook icons from react-icons
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -12,7 +13,6 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  // Validation du formulaire d'inscription classique
   const validateForm = () => {
     let newErrors = {};
 
@@ -44,17 +44,15 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Inscription classique par email / mot de passe
   const handleRegister = async (e) => {
-    
     e.preventDefault();
-    
-    if (!validateForm()){
-      alert("non valide")
-      return;}
-      
+    if (!validateForm()) {
+      alert("non valide");
+      return;
+    }
+
     try {
-      alert(" valide")
+      alert(" valide");
       await axios.post("http://localhost:8000/auth/register", { email, password, role });
       alert("Inscription réussie !");
       navigate("/login");
@@ -63,7 +61,6 @@ const Register = () => {
     }
   };
 
-  // ----- Inscription via Google -----
   const handleGoogleClick = () => {
     setShowRoleModal(true);
   };
@@ -78,7 +75,7 @@ const Register = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id_token }),
-      credentials: "include"
+      credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
@@ -92,14 +89,11 @@ const Register = () => {
       .catch((error) => console.error("Erreur:", error));
   };
 
-  // ----- Inscription via Facebook -----
   const handleFacebookRegister = () => {
-    // Vérifiez d'abord que le SDK Facebook est chargé
     if (!window.FB) {
       alert("Le SDK Facebook n'est pas chargé. Veuillez réessayer plus tard.");
       return;
     }
-    // Vérifier que le rôle est sélectionné
     if (!role) {
       alert("Veuillez sélectionner un rôle avant de continuer.");
       return;
@@ -112,7 +106,7 @@ const Register = () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ access_token: accessToken }),
-            credentials: "include"
+            credentials: "include",
           })
             .then((res) => res.json())
             .then((data) => {
@@ -133,38 +127,38 @@ const Register = () => {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-3xl font-semibold mb-6">Inscription</h2>
-      <form onSubmit={handleRegister}>
+    <div className="p-6 max-w-sm mx-auto bg-white rounded-lg shadow-lg mt-12">
+      <h2 className="text-3xl font-semibold text-center mb-6 text-orange-500">Inscription</h2>
+      <form onSubmit={handleRegister} className="space-y-4">
         <input
           type="email"
           placeholder="Email"
-          className="border p-2 mb-2 w-full"
+          className="border p-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+        {errors.email && <p className="text-orange-500 text-sm">{errors.email}</p>}
 
         <input
           type="password"
           placeholder="Mot de passe"
-          className="border p-2 mb-2 w-full"
+          className="border p-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+        {errors.password && <p className="text-orange-500 text-sm">{errors.password}</p>}
 
         <input
           type="password"
           placeholder="Confirmer le mot de passe"
-          className="border p-2 mb-2 w-full"
+          className="border p-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+        {errors.confirmPassword && <p className="text-orange-500 text-sm">{errors.confirmPassword}</p>}
 
         <select
-          className="border p-2 mb-2 w-full"
+          className="border p-2 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300"
           value={role}
           onChange={(e) => setRole(e.target.value)}
         >
@@ -173,41 +167,37 @@ const Register = () => {
           <option value="professionnel">Professionnel</option>
           <option value="collectivite">Collectivité</option>
         </select>
-        {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
+        {errors.role && <p className="text-orange-500 text-sm">{errors.role}</p>}
 
-        <button className="bg-blue-500 text-white p-3 rounded w-full mt-2 text-lg" type="submit">
+        <button className="bg-orange-500 text-white p-2 rounded-md w-full mt-4 text-base hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition duration-300" type="submit">
           S'inscrire
         </button>
+
+        <div className="mt-6 flex flex-col gap-4">
+          <button
+            className="bg-orange-500 text-white p-2 rounded-md w-full text-base hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition duration-300 flex items-center justify-center"
+            onClick={handleGoogleClick}
+          >
+            <FaGoogle className="mr-2 text-lg" />
+            S'inscrire avec Google
+          </button>
+
+          <button
+            className="bg-orange-500 text-white p-2 rounded-md w-full text-base hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition duration-300 flex items-center justify-center"
+            onClick={handleFacebookRegister}
+          >
+            <FaFacebook className="mr-2 text-lg" />
+            S'inscrire avec Facebook
+          </button>
+        </div>
       </form>
 
-      <div className="mt-4 flex flex-col gap-4">
-        {/* Bouton pour inscription avec Google */}
-        <button
-          className="bg-red-500 text-white p-3 rounded w-full text-lg"
-          onClick={handleGoogleClick}
-        >
-          S'inscrire avec Google
-        </button>
-
-        {/* Bouton pour inscription avec Facebook */}
-        <button
-          className="bg-blue-700 text-white p-3 rounded w-full text-lg"
-          onClick={handleFacebookRegister}
-        >
-          S'inscrire avec Facebook
-        </button>
-
-    
-       
-      </div>
-
-      {/* Modale pour Google (sélection du rôle) */}
       {showRoleModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-[500px]">
-            <h3 className="text-xl font-semibold mb-4">Choisissez votre rôle</h3>
+          <div className="bg-white p-6 rounded-lg shadow-xl w-[400px]">
+            <h3 className="text-2xl font-semibold mb-4 text-center text-orange-500">Choisissez votre rôle</h3>
             <select
-              className="border p-2 mb-4 w-full"
+              className="border p-2 mb-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
@@ -225,7 +215,7 @@ const Register = () => {
               />
             )}
             <button
-              className="mt-4 text-red-500 w-full text-lg"
+              className="mt-4 text-red-500 w-full text-lg text-center hover:underline transition duration-300"
               onClick={() => setShowRoleModal(false)}
             >
               Annuler

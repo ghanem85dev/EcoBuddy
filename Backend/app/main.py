@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth
+from app.routes import auth,chatBot,preferences
 
 app = FastAPI()
 
@@ -22,8 +22,8 @@ app.add_middleware(
 
 # Include your routers here
 app.include_router(auth.router)
+app.include_router(preferences.router)  
 
-# Example root route
 @app.get("/")
 def read_root():
     return {"message": "Hello, FastAPI!"}

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@react-oauth/google": "^0.12.1",
     "autoprefixer": "^9.8.8",
     "axios": "^1.7.9",
@@ -15,7 +18,7 @@
     "react-dom": "^18.3.1",
     "react-facebook-login": "^4.1.1",
     "react-facebook-login-lite": "^1.0.0",
-    "react-icons": "^5.4.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^6.29.0",
     "react-scripts": "^5.0.1",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",
