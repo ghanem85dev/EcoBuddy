@@ -1,72 +1,123 @@
-
 import React, { useState, useEffect } from "react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import axios from "axios";
 import RealTimeConsumption from "../components/RealTimeConsumption";
 import DevicesDetected from "../components/DevicesDetected";
 import Gamification from "../components/Gamification";
 import { MdDashboard } from "react-icons/md";
-import { FiCalendar } from "react-icons/fi";
+import { FaTimes, FaEye } from "react-icons/fa";
+import Card from "../components/Card";
 
-const Home = () => {
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+const initialCharts = [
+  { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption /> },
+  { id: "devices", name: "Appareils Détectés", component: <DevicesDetected /> },
+  { id: "gamification", name: "Gamification", component: <Gamification /> },
+];
 
-  // Mise à jour de l'heure toutes les secondes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDateTime(new Date());
-    }, 1000);
-    
-    return () => clearInterval(interval); // Nettoyage de l'intervalle au démontage du composant
-  }, []);
+const SortableItem = ({ chart, toggleChartVisibility }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: chart.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    marginBottom: "2rem",
+  };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      {/* Titre + Date/Heure */}
-      <div className="flex items-center justify-between mb-6">
-        {/* Titre */}
-        <div className="flex items-center text-gray-800 text-2xl font-semibold">
-          <MdDashboard className="text-orange-500 text-3xl mr-2" />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full max-w-4xl mx-auto"> 
+      <Card className="p-8 shadow-2xl rounded-2xl"> 
+        <div className="flex items-center justify-between p-6 border-b border-gray-400"> 
+          <span className="font-semibold text-xl">{chart.name}</span> 
+          <button onClick={() => toggleChartVisibility(chart)} className="text-gray-500 hover:text-gray-700"> 
+            <FaTimes /> 
+          </button> 
+        </div> 
+        <div className="p-6">{chart.component}</div>
+      </Card> 
+    </div> 
+  ); 
+};
+
+const Home = () => {
+  const [visibleCharts, setVisibleCharts] = useState(initialCharts);
+  const [hiddenCharts, setHiddenCharts] = useState([]);
+  const [chartPositions, setChartPositions] = useState({});
+
+  useEffect(() => {
+    axios.get(`http://localhost:8000/preferences/1`).then((response) => {
+      const savedOrder = response.data.chart_positions;
+      if (savedOrder.length) {
+        const orderedCharts = savedOrder.map((id) => initialCharts.find((chart) => chart.id === id)).filter(Boolean);
+        setVisibleCharts(orderedCharts);
+        setHiddenCharts(initialCharts.filter((chart) => !orderedCharts.includes(chart)));
+      }
+    }).catch(() => {});
+  }, []);
+
+  const savePreferences = (newOrder) => {
+    axios.put("http://localhost:8000/preferences", {
+      user_id: 1,
+      chart_positions: newOrder.map((chart) => chart.id),
+    }).catch(err => console.error("Error saving preferences", err));
+  };
+
+  const toggleChartVisibility = (chart) => {
+    if (visibleCharts.find((c) => c.id === chart.id)) {
+      setChartPositions((prev) => ({ ...prev, [chart.id]: visibleCharts.findIndex(c => c.id === chart.id) }));
+      setVisibleCharts((prev) => prev.filter((c) => c.id !== chart.id));
+      setHiddenCharts((prev) => [...prev, chart]);
+    } else {
+      setHiddenCharts((prev) => prev.filter((c) => c.id !== chart.id));
+      setVisibleCharts((prev) => {
+        const newCharts = [...prev];
+        const indexToRestore = chartPositions[chart.id] !== undefined ? chartPositions[chart.id] : prev.length;
+        newCharts.splice(indexToRestore, 0, chart);
+        savePreferences(newCharts);
+        return newCharts;
+      });
+    }
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      const oldIndex = visibleCharts.findIndex((chart) => chart.id === active.id);
+      const newIndex = visibleCharts.findIndex((chart) => chart.id === over.id);
+      const newOrder = arrayMove(visibleCharts, oldIndex, newIndex);
+      setVisibleCharts(newOrder);
+      savePreferences(newOrder);
+    }
+  };
+
+  return (
+    <div className="p-10 bg-gray-100 min-h-screen"> 
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center text-gray-800 text-4xl font-semibold"> 
+          <MdDashboard className="text-orange-500 text-5xl mr-4" />
           <span>Tableau de Bord</span>
         </div>
-
-        {/* Date et Heure */}
-        <div className="flex items-center space-x-2 text-orange-500 text-sm">
-          <FiCalendar className="text-orange-500 text-lg" />
-          <span>
-  {currentDateTime.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })}{" "}
-  - {currentDateTime.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-</span>
-
+        <div className="flex space-x-4">
+          {hiddenCharts.map((chart) => (
+            <div
+              key={chart.id}
+              className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-lg cursor-pointer text-xl"
+              onClick={() => toggleChartVisibility(chart)}
+            >
+              <FaEye className="text-orange-500" />
+              <span>{chart.name}</span>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Disposition en grille */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Consommation en Temps Réel - Grand graphique */}
-        <div className="lg:col-span-2 bg-white shadow-lg rounded-lg p-6 transition-all duration-300 hover:shadow-xl">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">Consommation en Temps Réel</h3>
-          <RealTimeConsumption />
-        </div>
-
-        {/* Conteneur pour les 2 cartes empilées à droite */}
-        <div className="flex flex-col gap-6">
-          {/* Appareils Détectés */}
-          <div className="bg-white shadow-lg rounded-lg p-6 transition-all duration-300 hover:shadow-xl">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Appareils Détectés</h3>
-            <DevicesDetected />
-          </div>
-
-          {/* Gamification */}
-          <div className="bg-white shadow-lg rounded-lg p-6 transition-all duration-300 hover:shadow-xl">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Gamification</h3>
-            <Gamification />
-          </div>
-        </div>
-      </div>
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={visibleCharts} strategy={verticalListSortingStrategy}>
+          {visibleCharts.map((chart) => (
+            <SortableItem key={chart.id} chart={chart} toggleChartVisibility={toggleChartVisibility} />
+          ))}
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };
