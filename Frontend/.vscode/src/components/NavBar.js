@@ -1,12 +1,28 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiMenu, FiSearch, FiBell, FiMessageSquare } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
+import { TbHomeBolt } from "react-icons/tb";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const menuRef = useRef(null);
+
+  // Gestion du clic extérieur pour fermer le menu déroulant
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fonction pour gérer la déconnexion
   const handleLogout = () => {
@@ -16,50 +32,64 @@ const Navbar = () => {
 
   return (
     <div className="w-full bg-gray-50 shadow-md p-4 flex items-center justify-between">
-      {/* Menu Icon */}
-      <div className="flex items-center">
-        <FiMenu className="text-orange-500 text-2xl cursor-pointer" />
+      {/* Sidebar Toggle (Menu Hamburger) */}
+      <div
+        className="cursor-pointer flex flex-col space-y-1"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+     
+       
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center bg-white rounded-lg shadow-sm w-1/2">
-        <input
-          type="text"
-          placeholder="Search"
-          className="text-orange-500 flex-1 px-4 py-2 rounded-l-lg focus:outline-none"
-        />
-        <button className="bg-orange-500 p-2 rounded-r-lg text-white">
-          <FiSearch size={23} />
-        </button>
+      {/* Logo et Titre Centré */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-2">
+        <TbHomeBolt size={25} className="text-orange-500" />
+        <p className="text-md font-bold uppercase">EnergyHub+</p>
       </div>
 
-      {/* Notifications and Profile */}
-      <div className="flex items-center gap-6 relative">
-        {/* Notification Icon */}
-        <div className="relative">
-          <FiBell className="text-black text-2xl cursor-pointer" />
-          <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-xs rounded-full px-1">
-            2
-          </span>
-        </div>
+   {/* Notifications, Search Bar et Profile */}
+<div className="flex items-center gap-6">
+  {/* Barre de Recherche réduite et déplacée à droite */}
+  <div className="flex items-center bg-white rounded-lg shadow-sm w-48 px-3">
+    <input
+      type="text"
+      placeholder="Search"
+      className="text-orange-500 flex-1 px-3 py-1 rounded-l-lg text-sm focus:outline-none"
+      aria-label="Search"
+    />
+    <button className="bg-orange-500 px-3 py-1 rounded-r-lg text-white" aria-label="Search button">
+      <FiSearch size={16} />
+    </button>
+  </div>
 
-        {/* Message Icon */}
-        <div className="relative">
-          <FiMessageSquare className="text-black text-2xl cursor-pointer" />
-          <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-xs rounded-full px-1">
-            2
-          </span>
-        </div>
+  {/* Notification Icon */}
+  <div className="relative cursor-pointer px-2">
+    
+    <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-xs rounded-full px-1">
+      
+    </span>
+  </div>
 
-        {/* Profile Icon & Dropdown Menu */}
-        <div className="relative">
-          {/* Icône Profil */}
-          <div
-            className="text-black text-2xl cursor-pointer"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <CgProfile />
-          </div>
+  {/* Message Icon */}
+  <div className="relative cursor-pointer px-2">
+    <FiMessageSquare className="text-black text-xl" aria-label="Messages" />
+    <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-xs rounded-full px-1">
+      2
+    </span>
+  </div>
+
+  {/* Profile Icon & Dropdown Menu */}
+  <div className="relative px-2" ref={menuRef}>
+    <div
+      className="text-black text-xl cursor-pointer"
+      onClick={() => setIsMenuOpen(!isMenuOpen)}
+      aria-label="Profile menu"
+    >
+      <CgProfile />
+    </div>
+  </div>
+</div>
+
 
           {/* Menu déroulant */}
           {isMenuOpen && (
@@ -86,8 +116,8 @@ const Navbar = () => {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    
+    
   );
 };
 

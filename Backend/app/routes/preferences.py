@@ -57,4 +57,4 @@ def save_user_preferences(preference: UserPreferenceSchema, db: Session = Depend
         db.rollback()  # Annule les changements en cas d'erreur
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
-    return {"message": "Preferences saved successfully"}
+

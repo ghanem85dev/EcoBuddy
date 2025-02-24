@@ -11,4 +11,3 @@ class UserPreference(Base):
     chart_positions = Column(JSON, nullable=False)  # Stockage en format JSON
 
     user = relationship("User", back_populates="preferences")
-    

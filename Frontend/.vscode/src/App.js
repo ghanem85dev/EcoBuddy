@@ -31,7 +31,7 @@ const App = () => {
         {!isAuthPage && <Navbar />}
         <Routes>
           {/* Routes accessibles sans protection */}
-          <Route path="/" element={<Home />} />
+          <Route path="/home/:id" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
