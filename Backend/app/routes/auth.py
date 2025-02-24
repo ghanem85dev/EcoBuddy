@@ -84,7 +84,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    return {"access_token": access_token, "role": db_user.role, "id":user.id}
+    return {"access_token": access_token, "role": db_user.role, "id":db_user.id}
 
 
 class UserCreate(BaseModel):
@@ -169,9 +169,9 @@ def google_signup(request: GoogleLoginRequest, role: str, db: Session = Depends(
         new_user = User(email=email, password="", role=role)
         db.add(new_user)
         db.commit()
-
+        userDB = db.query(User).filter(User.email == email).first()
         jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":user.id}
+        return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":userDB.id}
 
     except ValueError as e:
         print(f"Erreur de validation du token: {e}")
@@ -242,7 +242,7 @@ def facebook_signup(request: FacebookSignupRequest, role: str, db: Session = Dep
     new_user = User(email=email, password="", role=role)
     db.add(new_user)
     db.commit()
-
+    user=db.query(User).filter(User.email == email).first()
     jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":user.id}
 
