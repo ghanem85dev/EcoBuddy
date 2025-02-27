@@ -6,13 +6,14 @@ const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
-
+  const [idUser, setIdUser] = useState(null);
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       const decoded = jwtDecode(token);
       setUser(decoded.sub);
       setRole(decoded.role);
+      setIdUser(decoded.id);
     }
   }, []);
 
@@ -21,16 +22,18 @@ const AuthProvider = ({ children }) => {
     const decoded = jwtDecode(token);
     setUser(decoded.sub);
     setRole(decoded.role);
+    setIdUser(decoded.id)
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
     setRole(null);
+    setIdUser(null)
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout }}>
+    <AuthContext.Provider value={{ user, role,idUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

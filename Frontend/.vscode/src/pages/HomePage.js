@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
@@ -10,12 +10,11 @@ import Gamification from "../components/Gamification";
 import { MdDashboard } from "react-icons/md";
 import { FaTimes, FaEye } from "react-icons/fa";
 import Card from "../components/Card";
+import Residence from "../components/Residence";
+import ConsumptionComparison from "../components/ConsumptionComparison";
+import { AuthContext } from "../context/AuthContext";
 
-const initialCharts = [
-  { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption /> },
-  { id: "devices", name: "Appareils Détectés", component: <DevicesDetected /> },
-  { id: "gamification", name: "Gamification", component: <Gamification /> },
-];
+
 
 const SortableItem = ({ chart, toggleChartVisibility }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: chart.id });
@@ -26,22 +25,40 @@ const SortableItem = ({ chart, toggleChartVisibility }) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full max-w-4xl mx-auto"> 
-      <Card className="p-8 shadow-2xl rounded-2xl"> 
-        <div className="flex items-center justify-between p-6 border-b border-gray-400"> 
-          <span className="font-semibold text-xl">{chart.name}</span> 
-          <button onClick={() => toggleChartVisibility(chart)} className="text-gray-500 hover:text-gray-700"> 
-            <FaTimes /> 
-          </button> 
-        </div> 
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="w-full max-w-4xl mx-auto">
+      <Card className="p-8 shadow-2xl rounded-2xl">
+        <div className="flex items-center justify-between p-6 border-b border-gray-400">
+          <span className="font-semibold text-xl">{chart.name}</span>
+          <button onClick={() => toggleChartVisibility(chart)} className="text-gray-500 hover:text-gray-700">
+            <FaTimes />
+          </button>
+        </div>
         <div className="p-6">{chart.component}</div>
-      </Card> 
-    </div> 
-  ); 
+      </Card>
+    </div>
+  );
 };
 
 const Home = () => {
+  const { idUser } = useContext(AuthContext);
+  const initialCharts = [
+    { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption idUser={idUser}/> },
+    { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser} /> },  
+    { id: "gamification", name: "Gamification", component: <Gamification /> },
+  ];
+
   const [visibleCharts, setVisibleCharts] = useState(initialCharts);
+
+  useEffect(() => {
+    if (idUser) {
+      setVisibleCharts([
+        { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption idUser={idUser} /> },
+        { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser} /> },  
+        { id: "gamification", name: "Gamification", component: <Gamification /> },
+      ]);
+    }
+  }, [idUser]);
+
   const [hiddenCharts, setHiddenCharts] = useState([]);
   const [chartPositions, setChartPositions] = useState({});
 
@@ -92,32 +109,38 @@ const Home = () => {
   };
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen"> 
+    <div className="p-10 bg-gray-100 min-h-screen">
       <div className="flex items-center justify-between mb-10">
-        <div className="flex items-center text-gray-800 text-4xl font-semibold"> 
+        <div className="flex items-center text-gray-800 text-4xl font-semibold">
           <MdDashboard className="text-orange-500 text-5xl mr-4" />
           <span>Tableau de Bord</span>
         </div>
-        <div className="flex space-x-4">
-          {hiddenCharts.map((chart) => (
-            <div
-              key={chart.id}
-              className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-lg cursor-pointer text-xl"
-              onClick={() => toggleChartVisibility(chart)}
-            >
-              <FaEye className="text-orange-500" />
-              <span>{chart.name}</span>
-            </div>
-          ))}
+        <div className="flex items-center ml-auto space-x-4">
+          <Residence idUser={idUser} />
+          <div className="flex space-x-4">
+            {hiddenCharts.map((chart) => (
+              <div
+                key={chart.id}
+                className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-lg cursor-pointer text-xl"
+                onClick={() => toggleChartVisibility(chart)}
+              >
+                <FaEye className="text-orange-500" />
+                <span>{chart.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={visibleCharts} strategy={verticalListSortingStrategy}>
-          {visibleCharts.map((chart) => (
-            <SortableItem key={chart.id} chart={chart} toggleChartVisibility={toggleChartVisibility} />
-          ))}
-        </SortableContext>
-      </DndContext>
+  <SortableContext items={visibleCharts} strategy={verticalListSortingStrategy}>
+    {visibleCharts.map((chart) => (
+      <SortableItem key={chart.id} chart={chart} toggleChartVisibility={toggleChartVisibility} />
+    ))}
+  </SortableContext>
+  {/* This should be within the SortableContext if you want it to be draggable */}
+  <SortableItem chart={{ id: "comparison", name: "Comparaison de Consommation", component: <ConsumptionComparison idUser={idUser} /> }} toggleChartVisibility={toggleChartVisibility} />
+</DndContext>
+
     </div>
   );
 };

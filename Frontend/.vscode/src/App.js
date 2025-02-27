@@ -5,6 +5,8 @@ import Services from "./components/Services";
 import Banner from "./components/Banner";
 import Login from  "./pages/LoginPage";
 import Register from "./pages/RegisterPage";
+import SitesSettings from "./pages/SitesSettings"
+import Home from "./pages/HomePage"
 
 const App = () => {
   return (
@@ -23,6 +25,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/service" element={<Services />} />
+        <Route path="/home/:id" element={<Home />} />
+          <Route path="/Sites-settings/:id" element={<SitesSettings />} />
       </Routes>
     </main>
   );
