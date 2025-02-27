@@ -80,7 +80,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Mot de passe incorrect")
 
     access_token = create_access_token(
-        {"sub": db_user.email, "role": db_user.role},
+        {"sub": db_user.email, "role": db_user.role,"id":db_user.id},
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
@@ -142,7 +142,7 @@ def google_login_endpoint(request: GoogleLoginRequest, db: Session = Depends(get
         if not user:
             raise HTTPException(status_code=404, detail="Compte non trouvé. Inscrivez-vous d'abord.")
 
-        jwt_token = create_access_token({"sub": email, "role": user.role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        jwt_token = create_access_token({"sub": email, "role": user.role,"id":user.id}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
         return {"access_token": jwt_token, "email": email, "name": name, "role": user.role, "id":user.id}
 
     except ValueError as e:
