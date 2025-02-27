@@ -1,57 +1,31 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/NavBar";
-import Sidebar from "./components/SideBar";
-import Home from "./pages/HomePage";
-import Login from "./pages/LoginPage";
-import ParticulierDashboard from "./pages/ParticulierDashboardPage";
-import ProDashboard from "./pages/DashboardPage";
-import CollectiviteDashboard from "./pages/CollectiviteDashboardPage";
-import ProtectedRoutes from "./routes/ProtectedRoutes";
-import Marketplace from "./pages/MarketplacePage";
-import Settings from "./pages/SettingsPage";
+import Hero from "./components/Hero";
+import Services from "./components/Services";
+import Banner from "./components/Banner";
+import Login from  "./pages/LoginPage";
 import Register from "./pages/RegisterPage";
-import "./App.css";
-import { useLocation } from "react-router-dom";
-
-
 
 const App = () => {
-  const location = useLocation(); // Utilisez useLocation ici, dans le contexte du Router
-
-  // Vérifiez si l'utilisateur est sur /login ou /register
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
-
   return (
-    <div className="flex">
-      {/* Conditionally render Sidebar and Navbar based on the page */}
-      {!isAuthPage && <Sidebar />}
-      <div className="flex-1">
-        {!isAuthPage && <Navbar />}
-        <Routes>
-          {/* Routes accessibles sans protection */}
-          <Route path="/home/:id" element={<Home />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <main className="overflow-x-hidden bg-white text-dark">
+      <Routes>
+        {/* Page d'accueil */}
+        <Route path="/" element={
+          <>
+            <Hero />
+            <Services />
+            <Banner />
+          </>
+        } />
 
-          {/* Routes protégées avec des rôles */}
-          <Route element={<ProtectedRoutes allowedRoles={["particulier"]} />}>
-            <Route path="/particulier" element={<ParticulierDashboard />} />
-          </Route>
-          <Route element={<ProtectedRoutes allowedRoles={["professionnel"]} />}>
-            <Route path="/professionnel" element={<ProDashboard />} />
-          </Route>
-          <Route element={<ProtectedRoutes allowedRoles={["collectivite"]} />}>
-            <Route path="/collectivite" element={<CollectiviteDashboard />} />
-          </Route>
-        </Routes>
-      </div>
-    </div>
+        {/* Page de connexion */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/service" element={<Services />} />
+      </Routes>
+    </main>
   );
 };
-
 
 export default App;
