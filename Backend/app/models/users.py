@@ -11,3 +11,6 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, nullable=False)
     preferences = relationship("UserPreference", back_populates="user", uselist=False)
+    sites = relationship("Site", back_populates="user")
+
+    invitations = relationship("Invitation", back_populates="owner")

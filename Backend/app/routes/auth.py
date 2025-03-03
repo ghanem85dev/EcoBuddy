@@ -7,7 +7,7 @@ from google.oauth2 import id_token
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
-from app.models import User
+from ..models import User
 import requests
 import os
 from dotenv import load_dotenv
@@ -80,11 +80,11 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Mot de passe incorrect")
 
     access_token = create_access_token(
-        {"sub": db_user.email, "role": db_user.role},
+        {"sub": db_user.email, "role": db_user.role,"id":db_user.id},
         timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    return {"access_token": access_token, "role": db_user.role, "id":user.id}
+    return {"access_token": access_token, "role": db_user.role, "id":db_user.id}
 
 
 class UserCreate(BaseModel):
@@ -142,7 +142,7 @@ def google_login_endpoint(request: GoogleLoginRequest, db: Session = Depends(get
         if not user:
             raise HTTPException(status_code=404, detail="Compte non trouvé. Inscrivez-vous d'abord.")
 
-        jwt_token = create_access_token({"sub": email, "role": user.role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        jwt_token = create_access_token({"sub": email, "role": user.role,"id":user.id}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
         return {"access_token": jwt_token, "email": email, "name": name, "role": user.role, "id":user.id}
 
     except ValueError as e:
@@ -169,9 +169,9 @@ def google_signup(request: GoogleLoginRequest, role: str, db: Session = Depends(
         new_user = User(email=email, password="", role=role)
         db.add(new_user)
         db.commit()
-
+        userDB = db.query(User).filter(User.email == email).first()
         jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":user.id}
+        return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":userDB.id}
 
     except ValueError as e:
         print(f"Erreur de validation du token: {e}")
@@ -242,7 +242,7 @@ def facebook_signup(request: FacebookSignupRequest, role: str, db: Session = Dep
     new_user = User(email=email, password="", role=role)
     db.add(new_user)
     db.commit()
-
+    user=db.query(User).filter(User.email == email).first()
     jwt_token = create_access_token({"sub": email, "role": role}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": jwt_token, "email": email, "name": name, "role": role, "id":user.id}
 
