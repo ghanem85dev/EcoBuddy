@@ -3,209 +3,191 @@ import { useParams } from 'react-router-dom';
 import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { FaHome } from "react-icons/fa";
 import { motion } from "framer-motion";
+import residenceImage from "../assets/residence.png"; // Assurez-vous que l'image est correcte
 
 const SitesSettings = () => {
   const { id } = useParams();
   const [residences, setResidences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [newResidenceName, setNewResidenceName] = useState('');
-  const [newResidenceAddress, setNewResidenceAddress] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [newResidence, setNewResidence] = useState({ nom: '', adresse: '' });
+  const [showForm, setShowForm] = useState(false);
   const [editingResidence, setEditingResidence] = useState(null);
 
+  // Récupérer la liste des résidences
+  const fetchResidences = async () => {
+    if (!id) {
+      setError('ID utilisateur manquant');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:8000/sites/${id}`);
+      if (!response.ok) throw new Error('Erreur lors de la récupération des résidences');
+
+      const data = await response.json();
+      setResidences(data);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchResidences = async () => {
-      if (!id) {
-        setError('id est manquant');
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`http://localhost:8000/sites/${id}`);
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des données');
-        }
-        const data = await response.json();
-        setResidences(data);
-      } catch (error) {
-        setError(error.message);
-        console.error('Erreur lors de la récupération des résidences', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchResidences();
   }, [id]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette résidence ?')) {
+  const handleDelete = async (idSite) => {
+    if (window.confirm('Voulez-vous supprimer cette résidence ?')) {
       try {
-        const response = await fetch(`http://localhost:8000/sites/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error('Erreur lors de la suppression de la résidence');
-        }
-        setResidences((prevResidences) =>
-          prevResidences.filter((residence) => residence.idSite !== id)
-        );
+        const response = await fetch(`http://localhost:8000/sites/${idSite}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erreur lors de la suppression');
+
+        // Mettre à jour l'état après suppression
+        setResidences((prev) => prev.filter((residence) => residence.idSite !== idSite));
       } catch (error) {
         setError(error.message);
-        console.error('Erreur lors de la suppression de la résidence', error);
       }
     }
   };
 
-  const handleModify = (id) => {
-    const residenceToEdit = residences.find(residence => residence.idSite === id);
-    setEditingResidence(residenceToEdit);
+  const handleModify = (residence) => {
+    setEditingResidence(residence);
+    setNewResidence({ nom: residence.nom, adresse: residence.adresse });
+    setShowForm(true);
   };
 
-  const handleAddResidence = async () => {
-    if (!newResidenceName || !newResidenceAddress) {
-      setError('Le nom et l\'adresse de la résidence sont requis');
-      return;
-    }
-    try {
-      const response = await fetch(`http://localhost:8000/sites/${id}/1`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom: newResidenceName, adresse: newResidenceAddress }),
-      });
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'ajout de la résidence');
-      }
-      window.location.reload();
-    } catch (error) {
-      setError(error.message);
-      console.error('Erreur lors de l\'ajout de la résidence', error);
-    }
-  };
-
-  const handleSaveEdit = async (id) => {
-    if (!editingResidence.nom || !editingResidence.adresse) {
-      setError('Le nom et l\'adresse de la résidence sont requis');
+  const handleAddOrUpdateResidence = async () => {
+    if (!newResidence.nom || !newResidence.adresse) {
+      setError("Le nom et l'adresse sont requis.");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/sites/${id}/1`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nom: editingResidence.nom,
-          adresse: editingResidence.adresse,
-        }),
-      });
+      let url = `http://localhost:8000/sites/${id}/1`;
+      let method = "POST";
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour de la résidence');
+      if (editingResidence) {
+        url = `http://localhost:8000/sites/${editingResidence.idSite}/1`;
+        method = "PUT";
       }
 
-      setResidences((prevResidences) =>
-        prevResidences.map((residence) =>
-          residence.idSite === id ? { ...residence, ...editingResidence } : residence
-        )
-      );
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newResidence),
+      });
 
-      setEditingResidence(null); // Fermer le formulaire d'édition
+      if (!response.ok) throw new Error(`Erreur lors de ${editingResidence ? 'la modification' : "l'ajout"}`);
+
+      // Recharger les résidences après l'ajout ou la modification
+      fetchResidences();
+
+      setNewResidence({ nom: '', adresse: '' });
+      setEditingResidence(null);
+      setShowForm(false);
     } catch (error) {
       setError(error.message);
-      console.error('Erreur lors de la mise à jour de la résidence', error);
     }
   };
 
   return (
-    <section>
-      <div className="container py-14 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-8 space-y-6 md:space-y-0">
-        <div className="flex flex-col justify-center">
-          <div className="text-center md:text-left space-y-12">
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.5 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold !leading-snug"
-            >
-              Retrouvez vos sites sur MyEnergyHub
-            </motion.h1>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+    <section className="bg-white min-h-screen p-10">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* Illustration */}
+        <div className="flex items-center justify-center mt-10">
+          <motion.img 
+            src={residenceImage}
+            alt="Illustration résidence" 
+            className="w-2/3 md:w-1/2"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+
+        {/* Liste des résidences */}
+        <div>
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-3xl font-bold text-[#003366] mb-6 text-center md:text-left"
+          >
+            Vos Résidences
+          </motion.h1>
+
+          <div className="flex justify-center md:justify-start mb-6">
+            <motion.button
+              onClick={() => setShowForm(true)}
+              className="bg-[#003366] text-white py-2 px-6 rounded-lg hover:bg-[#0055A4] transition-all"
+              whileTap={{ scale: 0.95 }}
             >
               Ajouter une résidence
-            </button>
-            <div className="flex flex-col gap-6">
-              {residences.map((site) => (
-                <motion.div
-                  key={site.id}
-                  initial="initial"
-                  whileInView="animate"
-                  viewport={{ once: true }}
-                  className="flex flex-col items-start gap-2 p-6 bg-[#f4f4f4] rounded-2xl hover:bg-white duration-300 hover:shadow-2xl"
-                >
-                  <div className="flex justify-between w-full items-center">
-                    <div className="flex items-center gap-4">
-                      <FaHome className="text-3xl" style={{ position: 'relative', top: '8px' }} />
-                      <p className="text-xl font-semibold">{site.nom}</p>
-                    </div>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => handleModify(site.idSite)}
-                        className="text-black"
-                      >
-                        <AiOutlineEdit className="text-xl" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(site.idSite)}
-                        className="text-black"
-                      >
-                        <AiOutlineDelete className="text-xl" />
-                      </button>
-                    </div>
+            </motion.button>
+          </div>
+
+          {/* Liste des résidences */}
+          <div className="overflow-y-auto max-h-[60vh] space-y-4">
+            {residences.map((site) => (
+              <motion.div
+                key={site.idSite}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-[#f0faff] p-5 rounded-xl shadow-lg border border-gray-300 hover:shadow-2xl transition-all flex justify-between items-center"
+              >
+                <div className="flex items-center gap-4">
+                  <FaHome className="text-3xl text-[#003366]" />
+                  <div>
+                    <p className="text-lg font-semibold">{site.nom}</p>
+                    <p className="text-sm text-[#0055A4]">{site.adresse}</p>
                   </div>
-                  <p className="text-sm text-blue-800 mt-1 ml-10">{site.adresse}</p>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+                <div className="flex gap-4">
+                  <button onClick={() => handleModify(site)} className="text-[#003366]">
+                    <AiOutlineEdit className="text-xl" />
+                  </button>
+                  <button onClick={() => handleDelete(site.idSite)} className="text-red-600">
+                    <AiOutlineDelete className="text-xl" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Pop-up pour ajouter ou modifier une résidence */}
-      {(showAddForm || editingResidence) && (
+      {/* Pop-up d'ajout/modification */}
+      {showForm && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-            <h3 className="text-2xl mb-4">{editingResidence ? 'Modifier la résidence' : 'Ajouter une résidence'}</h3>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-2xl font-semibold text-[#003366] mb-4">
+              {editingResidence ? 'Modifier la résidence' : 'Ajouter une résidence'}
+            </h3>
             <input
               type="text"
               placeholder="Nom de la résidence"
-              value={editingResidence ? editingResidence.nom : newResidenceName}
-              onChange={(e) => editingResidence ? setEditingResidence({ ...editingResidence, nom: e.target.value }) : setNewResidenceName(e.target.value)}
+              value={newResidence.nom}
+              onChange={(e) => setNewResidence({ ...newResidence, nom: e.target.value })}
               className="mb-4 p-2 w-full border border-gray-300 rounded-md"
             />
             <input
               type="text"
               placeholder="Adresse de la résidence"
-              value={editingResidence ? editingResidence.adresse : newResidenceAddress}
-              onChange={(e) => editingResidence ? setEditingResidence({ ...editingResidence, adresse: e.target.value }) : setNewResidenceAddress(e.target.value)}
+              value={newResidence.adresse}
+              onChange={(e) => setNewResidence({ ...newResidence, adresse: e.target.value })}
               className="mb-4 p-2 w-full border border-gray-300 rounded-md"
             />
             <div className="flex gap-4">
-              <button
-                onClick={editingResidence ? () => handleSaveEdit(editingResidence.idSite) : handleAddResidence}
-                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
-              >
-                {editingResidence ? 'Sauvegarder' : 'Ajouter'}
+              <button onClick={handleAddOrUpdateResidence} className="bg-[#003366] text-white py-2 px-4 rounded-md">
+                {editingResidence ? 'Modifier' : 'Ajouter'}
               </button>
-              <button
-                onClick={() => { setEditingResidence(null); setShowAddForm(false); }}
-                className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
-              >
+              <button onClick={() => setShowForm(false)} className="bg-gray-500 text-white py-2 px-4 rounded-md">
                 Annuler
               </button>
             </div>

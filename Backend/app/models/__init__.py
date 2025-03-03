@@ -7,3 +7,5 @@ from .site import Site
 from .categorie_appareil import Categorie_Appareil
 from .appareil import Appareil
 from .consommation import Consommation
+from .invitation import Invitation 
+from .UserSite import UserSite

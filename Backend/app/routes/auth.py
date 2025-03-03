@@ -7,7 +7,7 @@ from google.oauth2 import id_token
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
-from app.models import User
+from ..models import User
 import requests
 import os
 from dotenv import load_dotenv

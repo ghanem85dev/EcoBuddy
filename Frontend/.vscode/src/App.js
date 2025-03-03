@@ -5,8 +5,10 @@ import Services from "./components/Services";
 import Banner from "./components/Banner";
 import Login from  "./pages/LoginPage";
 import Register from "./pages/RegisterPage";
-import SitesSettings from "./pages/SitesSettings"
-import Home from "./pages/HomePage"
+import SitesSettings from "./pages/SitesSettings";
+import Home from "./pages/HomePage";
+import InviteUser from "./pages/InviteUser";
+import AcceptInvite from "./pages/AcceptInvite";
 
 const App = () => {
   return (
@@ -27,6 +29,9 @@ const App = () => {
         <Route path="/service" element={<Services />} />
         <Route path="/home/:id" element={<Home />} />
           <Route path="/Sites-settings/:id" element={<SitesSettings />} />
+           
+<Route path="/invite" element={<InviteUser />} />
+        <Route path="/accept-invite/:token" element={<AcceptInvite />} />
       </Routes>
     </main>
   );

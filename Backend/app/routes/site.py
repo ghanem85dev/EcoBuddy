@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database.database import SessionLocal
 from ..models import Site
-from app.models import User
+from app.models import User,UserSite
 router = APIRouter()
 
 def get_db():
@@ -23,7 +23,37 @@ def get_user_sites(user_id: int, db: Session = Depends(get_db)):
     
     # Si l'utilisateur existe, on retourne ses sites
     return user.sites
+@router.get("/user-sites/{user_id}")
+def get_user_sites(user_id: int, db: Session = Depends(get_db)):
+    # Vérifier si l'utilisateur existe
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
 
+    # Récupérer les sites dont l'utilisateur est propriétaire
+    owned_sites = db.query(Site).filter(Site.idUser == user_id).all()
+
+    # Récupérer les sites où l'utilisateur a accepté une invitation
+    invited_sites = (
+        db.query(Site)
+        .join(UserSite, UserSite.site_id == Site.idSite)
+        .filter(UserSite.user_id == user_id)
+        .all()
+    )
+
+    # Fusionner les résultats avec les bonnes clés
+    sites_list = [
+        {
+            "idSite": site.idSite,
+            "idCategorieSite": site.idCategorieSite,
+            "idUser": site.idUser,
+            "nom": site.nom,
+            "adresse": site.adresse
+        } 
+        for site in owned_sites + invited_sites
+    ]
+
+    return sites_list
 
 class NewSite(BaseModel):
     nom: str
@@ -63,6 +93,3 @@ def update_site(site_id: int, db: Session = Depends(get_db)):
     db.delete(db_site)
     db.commit()
     return {"message": "Site supprimé avec succès."}
-
-
-

@@ -64,6 +64,57 @@ const Login = () => {
       alert("Erreur lors de la réinitialisation !");
     }
   };
+  const handleSuccess = (response) => {
+    const id_token = response.credential;
+    fetch("http://localhost:8000/auth/google-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id_token }),
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.access_token) {
+          login(data.access_token);
+          alert("Connexion réussie !");
+          navigate(`/home/${data.id}`);
+        } else {
+          alert("Veuillez créer un compte !");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
+  const handleFacebookLogin = () => {
+    window.FB.login(
+      (response) => {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          fetch("http://localhost:8000/auth/facebook-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: accessToken }),
+            credentials: "include",
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.access_token) {
+                login(data.access_token);
+                alert("Connexion réussie !");
+                navigate(`/home/${data.id}`);
+              } else {
+                alert("Veuillez créer un compte !");
+              }
+            })
+            .catch((error) => console.error("Erreur de connexion Facebook:", error));
+        }
+      },
+      { scope: "public_profile,email" }
+    );
+  };
 
   return (
     <div className="flex h-screen">
@@ -81,7 +132,7 @@ const Login = () => {
               {/* Connexion Google */}
               <div className="flex-1 border border-gray-300 py-3 rounded-lg shadow-sm cursor-pointer flex justify-center items-center">
                 <GoogleLogin
-                  onSuccess={(response) => console.log("Connexion Google réussie :", response)}
+                  onSuccess={handleSuccess}
                   onError={() => console.log("Erreur de connexion Google")}
                 />
               </div>
@@ -92,7 +143,7 @@ const Login = () => {
                   appId="604000669075467"
                   autoLoad={false}
                   fields="name,email,picture"
-                  callback={() => console.log("Connexion Facebook")}
+                  callback={handleFacebookLogin}
                   cssClass="flex justify-center items-center text-gray-700 w-full"
                   textButton="Se connecter avec Facebook"
                   icon={<FaFacebookF className="text-blue-600 text-xl mr-2" />}

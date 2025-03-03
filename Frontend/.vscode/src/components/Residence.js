@@ -1,144 +1,110 @@
-import React, { useState, useEffect } from 'react'; 
-import { useNavigate } from 'react-router-dom'; // Import de useNavigate 
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { IoSettingsSharp } from "react-icons/io5";
+import { motion } from "framer-motion";
 
-const Residence = ({ idUser }) => {   
-  const [residences, setResidences] = useState([]);   
-  const [selectedResidence, setSelectedResidence] = useState(0);  // Stocke l'ID de la résidence sélectionnée
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);   
-  const [loading, setLoading] = useState(false);   
-  const [error, setError] = useState(null);   
-  const navigate = useNavigate(); // Hook pour la navigation    
+const Residence = ({ idUser }) => {
+  const [residences, setResidences] = useState([]);
+  const [selectedResidence, setSelectedResidence] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  // Récupérer les résidences de l'utilisateur   
-  useEffect(() => {     
-    const fetchResidences = async () => {       
-      setLoading(true);       
-      setError(null);       
-      try {         
-        const response = await fetch(`http://localhost:8000/sites/${idUser}`);         
-        if (!response.ok) {           
-          throw new Error('Erreur lors de la récupération des données');         
-        }         
-        const data = await response.json();         
-        setResidences(data);         
-        
-        // Sélectionner "Toutes les résidences" par défaut si aucune résidence n'est encore sélectionnée
+  useEffect(() => {
+    const fetchResidences = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`http://localhost:8000/sites/${idUser}`);
+        if (!response.ok) throw new Error('Erreur lors de la récupération des données');
+        const data = await response.json();
+        setResidences(data);
+
+        // Sélection par défaut
         const savedResidence = localStorage.getItem('selectedResidence');
         const initialSelectedResidence = savedResidence ? parseInt(savedResidence, 10) : 0;
-        
-        if (initialSelectedResidence === 0 && data.length > 0) {
-          setSelectedResidence(0); // Sélectionner "Toutes les résidences" par défaut
-        } else {
-          setSelectedResidence(initialSelectedResidence); // Utiliser la résidence précédemment sélectionnée
-        }
+        setSelectedResidence(initialSelectedResidence === 0 && data.length > 0 ? 0 : initialSelectedResidence);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      } catch (error) {         
-        setError(error.message);         
-        console.error('Erreur lors de la récupération des résidences', error);       
-      } finally {         
-        setLoading(false);       
-      }     
-    };      
-
-    if (idUser) {       
-      fetchResidences();     
-    }   
-  }, [idUser]); // Pas besoin de selectedResidence dans les dépendances
-
-  // Fonction pour gérer la sélection d'une résidence   
-  const handleResidenceSelect = (residence) => {     
-    if (residence.idSite === null) {
-      // Si "Toutes les résidences" est sélectionnée, on stocke 0 dans localStorage
-      setSelectedResidence(0);
-      localStorage.setItem('selectedResidence', 0);
-    } else {
-      // Sinon, on stocke l'ID de la résidence dans localStorage
-      setSelectedResidence(residence.idSite);
-      localStorage.setItem('selectedResidence', residence.idSite);
+    if (idUser) {
+      fetchResidences();
     }
-    setIsDropdownOpen(false);   
+  }, [idUser]);
+
+  const handleResidenceSelect = (residence) => {
+    const selectedId = residence.idSite === null ? 0 : residence.idSite;
+    setSelectedResidence(selectedId);
+    localStorage.setItem('selectedResidence', selectedId);
+    setIsDropdownOpen(false);
   };
 
-  // Fonction pour naviguer vers la page de paramètres et passer idUser dans l'URL   
-  const goToSettings = () => {     
-    navigate(`/Sites-settings/${idUser}`); // Passe idUser dans l'URL   
+  const goToSettings = () => {
+    navigate(`/Sites-settings/${idUser}`);
   };
 
-  return (     
-    <div className="residence-component" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>       
-      {/* Affichage de l'état de chargement */}       
-      {loading && <p>Chargement des résidences...</p>}        
-      {/* Affichage des erreurs */}       
-      {error && <p style={{ color: 'red' }}>{error}</p>}        
-      <div className="dropdown-container" style={{ position: 'relative' }}>         
-        <button           
-          className="dropdown-button"           
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}           
-          style={{             
-            backgroundColor: '#ccc',             
-            color: '#fff',             
-            border: 'none',             
-            padding: '5px 10px',             
-            fontSize: '14px',             
-            cursor: 'pointer',             
-            borderRadius: '5px',           
-          }}         
-        >           
-          {selectedResidence === 0 ? 'Toutes les résidences' : residences.find(res => res.idSite === selectedResidence)?.nom}         
-        </button>          
-        {isDropdownOpen && (           
-          <ul className="dropdown-list" style={{ listStyleType: 'none', padding: 0, position: 'absolute', backgroundColor: 'white', border: '1px solid #ccc', width: '100%', marginTop: '5px' }}>             
-            {residences.length === 0 ? (               
-              <li>Aucune résidence disponible</li>             
-            ) : (               
-              <>
-                <li                   
-                  className="dropdown-item"                   
-                  onClick={() => handleResidenceSelect({ idSite: null, nom: 'Toutes les résidences' })}                   
-                  style={{                     
-                    cursor: 'pointer',                     
-                    padding: '10px',                     
-                    backgroundColor: '#f0f0f0',                     
-                    marginBottom: '5px',                   
-                  }}                 
-                >                   
-                  Toutes les résidences                 
-                </li> 
-                {residences.map((residence) => (                 
-                  <li                   
-                    key={residence.idSite}                   
-                    className="dropdown-item"                   
-                    onClick={() => handleResidenceSelect(residence)}                   
-                    style={{                     
-                      cursor: 'pointer',                     
-                      padding: '10px',                     
-                      backgroundColor: '#f0f0f0',                     
-                      marginBottom: '5px',                   
-                    }}                 
-                  >                   
-                    {residence.nom}                 
-                  </li>               
-                ))} 
-              </>             
-            )}           
-          </ul>         
-        )}       
-      </div>        
-      {/* Bouton paramètres */}       
-      <button         
-        className="settings-button"         
-        onClick={goToSettings}         
-        style={{           
-          backgroundColor: 'transparent',           
-          border: 'none',           
-          cursor: 'pointer',           
-          fontSize: '20px',         
-        }}       
-      >         
-        ⚙️       
-      </button>     
-    </div>   
-  ); 
+  return (
+    <div className="relative flex items-center gap-4">
+      {loading && <p className="text-blue-500 font-semibold">Chargement...</p>}
+      {error && <p className="text-red-500 font-semibold">{error}</p>}
+
+      {/* Bouton principal */}
+      <div className="relative">
+        <motion.button
+          className="bg-[#003366] text-white px-4 py-2 rounded-lg shadow-lg text-lg flex items-center gap-2 hover:bg-[#4A90E2] transition-all"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          whileTap={{ scale: 0.95 }}
+        >
+          {selectedResidence === 0 ? 'Toutes les résidences' : residences.find(res => res.idSite === selectedResidence)?.nom}
+        </motion.button>
+
+        {/* Dropdown des résidences */}
+        {isDropdownOpen && (
+          <motion.ul
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-lg overflow-hidden border border-[#003366]"
+          >
+            <li
+              className="px-4 py-3 cursor-pointer hover:bg-blue-100 text-[#003366]"
+              onClick={() => handleResidenceSelect({ idSite: null, nom: 'Toutes les résidences' })}
+            >
+              Toutes les résidences
+            </li>
+            {residences.length > 0 ? (
+              residences.map((residence) => (
+                <li
+                  key={residence.idSite}
+                  className="px-4 py-3 cursor-pointer hover:bg-blue-100 text-[#003366]"
+                  onClick={() => handleResidenceSelect(residence)}
+                >
+                  {residence.nom}
+                </li>
+              ))
+            ) : (
+              <li className="px-4 py-3 text-gray-500">Aucune résidence disponible</li>
+            )}
+          </motion.ul>
+        )}
+      </div>
+
+      {/* Bouton paramètres */}
+      <motion.button
+        className="text-white bg-[#003366] p-3 rounded-full shadow-lg hover:bg-[#4A90E2] transition-all"
+        onClick={goToSettings}
+        whileHover={{ rotate: 90 }}
+      >
+        <IoSettingsSharp size={24} />
+      </motion.button>
+    </div>
+  );
 };
 
-export default Residence; 
+export default Residence;

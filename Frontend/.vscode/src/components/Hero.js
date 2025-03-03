@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // Import manquant
+import { useNavigate } from "react-router-dom"; // Import de la navigation
 import Navbar from "../components/NavBar";
 import Blob from "../assets/blob.svg";
 import HeroPng from "../assets/hero.png";
@@ -23,11 +23,11 @@ const Hero = () => {
   return (
     <section className="bg-[#A7E6F7] overflow-hidden relative">
       <Navbar />
-      <div className="container grid grid-cols-1 md:grid-cols-2 min-h-[650px]">
+      <div className="container grid grid-cols-1 md:grid-cols-2 min-h-[700px]">
         
         {/* Texte principal */}
         <div className="flex flex-col justify-center py-14 md:py-0 relative z-20">
-          <div className="text-center md:text-left space-y-10 lg:max-w-[500px] px-6">
+          <div className="text-center md:text-left space-y-10 lg:max-w-[550px] px-6">
             
             {/* Titre principal */}
             <motion.h1
@@ -59,27 +59,33 @@ const Hero = () => {
 
         {/* Hero Image */}
         <div className="flex justify-center items-center relative">
-          <div className="relative">
-            {/* Image de fond */}
-            <motion.img
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeInOut" }}
-              src={Blob}
-              alt="Background Shape"
-              className="absolute -top-10 w-[700px] md:w-[1200px] z-[1]"
-            />
+          <div className="relative w-full flex justify-center">
+            
+   
 
-            {/* Image principale */}
-            <motion.img
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeInOut" }}
-              src={HeroPng}
-              alt="Hero"
-              className="w-[250px] xl:w-[450px] relative z-10 drop-shadow"
-              style={{ transform: "translateY(-50px)" }}
-            />
+<motion.img
+  initial={{ x: -50, opacity: 0 }}
+  animate={{ x: 0, opacity: 1 }}
+  transition={{ duration: 0.6, delay: 0.2, ease: "easeInOut" }}
+  src={Blob}
+  alt="Background Shape"
+  className="absolute -top-[300px] w-[850px] md:w-[850px] z-[2]" // Ajustement : Réduction de taille + déplacement plus haut
+/>
+
+<motion.img
+  initial={{ x: 50, opacity: 0 }}
+  animate={{ x: 0, opacity: 1 }}
+  transition={{ duration: 0.6, delay: 0.4, ease: "easeInOut" }}
+  src={HeroPng}
+  alt="Hero"
+  className="w-[320px] xl:w-[400px] relative z-10 drop-shadow"
+  style={{ transform: "translateY(-160px)" }} // Ajustement pour équilibrer
+/>
+
+
+
+
+         
           </div>
         </div>
       </div>

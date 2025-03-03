@@ -13,6 +13,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
   const [errors, setErrors] = useState({});
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -50,47 +51,98 @@ const Register = () => {
     }
   };
 
+  const handleGoogleClick = () => {
+    setShowRoleModal(true);
+  };
+
+  const handleGoogleSuccess = (response) => {
+    const id_token = response.credential;
+    if (!role) {
+      alert("Veuillez sélectionner un rôle avant de continuer.");
+      return;
+    }
+    fetch(`http://localhost:8000/auth/google-signup?role=${encodeURIComponent(role)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token }),
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.access_token) {
+          alert("Inscription réussie ! Veuillez vous connecter.");
+          navigate("/login");
+        } else {
+          alert("Ce compte existe déjà !");
+        }
+      })
+      .catch((error) => console.error("Erreur:", error));
+  };
+
+  const handleFacebookRegister = () => {
+    if (!window.FB) {
+      alert("Le SDK Facebook n'est pas chargé. Veuillez réessayer plus tard.");
+      return;
+    }
+    if (!role) {
+      alert("Veuillez sélectionner un rôle avant de continuer.");
+      return;
+    }
+    window.FB.login(
+      (response) => {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          fetch(`http://localhost:8000/auth/facebook-signup?role=${encodeURIComponent(role)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: accessToken }),
+            credentials: "include",
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.access_token) {
+                alert("Inscription réussie ! Veuillez vous connecter.");
+                navigate("/login");
+              } else {
+                alert("Ce compte existe déjà !");
+              }
+            })
+            .catch((error) => console.error("Erreur lors de l'inscription Facebook:", error));
+        } else {
+          alert("Connexion Facebook annulée ou échouée.");
+        }
+      },
+      { scope: "public_profile,email" }
+    );
+  };
+
   return (
     <div className="grid grid-cols-2 h-screen w-full">
-      {/* Section Formulaire - Correction pour éviter les espaces */}
       <div className="flex flex-col justify-center items-center px-16">
         <h2 className="text-4xl font-bold text-[#6eb1e6] mb-4">Inscription</h2>
-        
-        {/* Correction du paragraphe pour un affichage complet */}
         <p className="text-gray-500 mb-6 text-center leading-relaxed w-full">
           Créez un compte et commencez à surveiller votre consommation énergétique.
         </p>
+        <div className="flex w-full gap-4">
+          <div className="flex-1 border border-gray-300 py-3 rounded-lg shadow-sm cursor-pointer flex justify-center items-center">
+          <button
+            className="bg-orange-500 text-white p-2 rounded-md w-full text-base hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300 transition duration-300 flex items-center justify-center"
+            onClick={handleGoogleClick}
+          ></button>
+          </div>
+          <div className="flex-1 border border-gray-300 py-3 rounded-lg shadow-sm cursor-pointer flex justify-center items-center">
+            <FacebookLogin
+              appId="604000669075467"
+              autoLoad={false}
+              fields="name,email,picture"
+              callback={handleFacebookRegister}
+              cssClass="flex justify-center items-center text-gray-700 w-full"
+              textButton="S'inscrire avec Facebook"
+              icon={<FaFacebookF className="text-blue-600 text-xl mr-2" />}
+            />
+          </div>
+        </div>
 
-   {/* Conteneur pour aligner Google et Facebook sur la même ligne */}
-<div className="flex w-full gap-4">
-  {/* Connexion avec Google */}
-  <div className="flex-1 border border-gray-300 py-3 rounded-lg shadow-sm cursor-pointer flex justify-center items-center">
-    <GoogleLogin
-      onSuccess={(response) => {
-        console.log("Connexion Google réussie :", response);
-      }}
-      onError={() => {
-        console.log("Erreur de connexion Google");
-      }}
-    />
-  </div>
-
-  {/* Connexion avec Facebook */}
-  <div className="flex-1 border border-gray-300 py-3 rounded-lg shadow-sm cursor-pointer flex justify-center items-center">
-    <FacebookLogin
-      appId="604000669075467"
-      autoLoad={false}
-      fields="name,email,picture"
-      callback={() => console.log("Connexion Facebook")}
-      cssClass="flex justify-center items-center text-gray-700 w-full"
-      textButton="S'inscrire avec Facebook"
-      icon={<FaFacebookF className="text-blue-600 text-xl mr-2" />}
-    />
-  </div>
-</div>
-
-
-        {/* Ligne séparatrice */}
         <div className="flex items-center my-4 w-full">
           <hr className="flex-grow border-gray-300" />
           <span className="px-3 text-[#6eb1e6] font-semibold text-sm">Ou inscrivez-vous avec votre e-mail</span>
@@ -149,7 +201,6 @@ const Register = () => {
             {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
           </div>
 
-          {/* Correction du bouton d'inscription */}
           <button
             type="submit"
             className="w-full py-3 rounded-lg text-white font-bold text-lg bg-[#6eb1e6] hover:bg-[#5a9ace] transition"
@@ -164,11 +215,41 @@ const Register = () => {
             </a>
           </p>
         </form>
-      </div>
 
-      {/* Section Illustration - Suppression des espaces et alignement */}
-      <div className="flex justify-center items-center">
-        <img src={loginImage} alt="Illustration Inscription" className="max-w-md object-contain" />
+        {showRoleModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-[400px]">
+            <h3 className="text-2xl font-semibold mb-4 text-center text-orange-500">Choisissez votre rôle</h3>
+            <select
+              className="border p-2 mb-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-300"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="">Sélectionnez un rôle</option>
+              <option value="particulier">Particulier</option>
+              <option value="professionnel">Professionnel</option>
+              <option value="collectivite">Collectivité</option>
+            </select>
+            {role && (
+              <GoogleLogin
+                clientId="104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com"
+                buttonText="Continuer avec Google"
+                onSuccess={handleGoogleSuccess}
+                onError={() => console.log("Erreur de connexion Google")}
+              />
+            )}
+            <button
+              className="mt-4 text-red-500 w-full text-lg text-center hover:underline transition duration-300"
+              onClick={() => setShowRoleModal(false)}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+      </div>
+      <div className="hidden lg:block flex justify-center items-center bg-blue-50">
+        <img src={loginImage} alt="login" className="w-3/4 h-3/4 object-cover" />
       </div>
     </div>
   );
