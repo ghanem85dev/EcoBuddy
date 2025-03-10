@@ -30,7 +30,7 @@ const Login = () => {
       localStorage.setItem("token", response.data.access_token);
 
       alert("Connexion réussie !");
-      navigate(`/home/${response.data.id}`);
+      navigate(`/dashboard/${response.data.id}`);
     } catch (error) {
       alert("Erreur de connexion !");
     }
@@ -79,7 +79,7 @@ const Login = () => {
         if (data.access_token) {
           login(data.access_token);
           alert("Connexion réussie !");
-          navigate(`/home/${data.id}`);
+          navigate(`/dashboard/${data.id}`);
         } else {
           alert("Veuillez créer un compte !");
         }
@@ -104,7 +104,7 @@ const Login = () => {
               if (data.access_token) {
                 login(data.access_token);
                 alert("Connexion réussie !");
-                navigate(`/home/${data.id}`);
+                navigate(`/dashboard/${data.id}`);
               } else {
                 alert("Veuillez créer un compte !");
               }

@@ -9,3 +9,5 @@ from .appareil import Appareil
 from .consommation import Consommation
 from .invitation import Invitation 
 from .UserSite import UserSite
+from .alerts import Alertes
+from .categorie_alerte import Categorie_Alerte

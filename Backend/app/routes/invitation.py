@@ -66,16 +66,29 @@ async def invite_user(request: InviteRequest, db: Session = Depends(get_db)):
     site_id = request.site_id
     owner_id = request.owner_id
     print(f"Requête reçue: email={request.email}, site_id={request.site_id}")
+    
     # Vérifier si le site existe
     site = db.query(Site).filter(Site.idSite == site_id).first()
     if not site:
         raise HTTPException(status_code=404, detail="Site non trouvé")
+    
     print(f"Requête reçue: email={request.email}, site_id={request.site_id}")
+    
     # Vérifier si l'utilisateur existe dans la base de données
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Vérifier si l'utilisateur a le même rôle que l'utilisateur qui envoie l'invitation
+    owner_user = db.query(User).filter(User.id == owner_id).first()
+    if not owner_user:
+        raise HTTPException(status_code=404, detail="Utilisateur propriétaire non trouvé")
+
+    if user.role != owner_user.role:
+        raise HTTPException(status_code=400, detail="Les rôles des utilisateurs ne correspondent pas")
+
     print(f"Requête reçue: email={request.email}, site_id={request.site_id}")
+    
     # Vérifier si l'utilisateur est déjà membre du site
     user_site = db.query(UserSite).filter(UserSite.user_id == user.id, UserSite.site_id == site_id).first()
     if user_site:
@@ -83,7 +96,7 @@ async def invite_user(request: InviteRequest, db: Session = Depends(get_db)):
 
     # Générer un token et créer l'invitation
     token = secrets.token_hex(16)
-    invitation = Invitation(email=email, site_id=site_id, token=token, status="pending", owner_id=owner_id)  # owner_id mis à None
+    invitation = Invitation(email=email, site_id=site_id, token=token, status="pending", owner_id=owner_id)
     db.add(invitation)
     db.commit()
 

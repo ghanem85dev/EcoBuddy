@@ -8,6 +8,7 @@ const InviteUser = () => {
   const [email, setEmail] = useState("");
   const [sites, setSites] = useState([]);
   const [selectedSite, setSelectedSite] = useState("");
+  const [role, setRole] = useState(""); // State to hold the user's role
 
   useEffect(() => {
     if (!idUser) {
@@ -27,7 +28,17 @@ const InviteUser = () => {
       }
     };
 
+    const fetchUserRole = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/user/${idUser}/role`);
+        setRole(response.data.role); // Assuming the API returns the user's role
+      } catch (error) {
+        console.error("Erreur lors de la récupération du rôle de l'utilisateur", error);
+      }
+    };
+
     fetchSites();
+    fetchUserRole(); // Fetch the user's role on component mount
   }, [idUser]);
 
   const handleInvite = async () => {
@@ -35,17 +46,24 @@ const InviteUser = () => {
       alert("Veuillez entrer un email et sélectionner un site.");
       return;
     }
+
     try {
-      await axios.post("http://localhost:8000/api/invite", {
+      // Appel API pour envoyer l'invitation
+      const response = await axios.post("http://localhost:8000/api/invite", {
         email,
         site_id: Number(selectedSite),
-        owner_id: idUser
+        owner_id: idUser,  // L'id de l'utilisateur connecté
       });
+
       alert("Invitation envoyée !");
-      setEmail("");
+      setEmail(""); // Réinitialiser l'email après l'envoi
     } catch (error) {
       console.error(error);
-      alert("Erreur lors de l'envoi");
+      if (error.response && error.response.data) {
+        alert(error.response.data.detail || "Erreur lors de l'envoi de l'invitation");
+      } else {
+        alert("Erreur lors de l'envoi");
+      }
     }
   };
 
@@ -58,7 +76,7 @@ const InviteUser = () => {
         className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md border border-gray-200"
       >
         <h3 className="text-2xl font-semibold text-[#003366] mb-6 text-center">
-          Inviter un membre
+          Inviter un {role === "particular" ? "membre" : "responsable"}
         </h3>
 
         {/* Champ Email */}
