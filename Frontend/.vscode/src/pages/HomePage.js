@@ -11,9 +11,12 @@ import Gamification from "../components/Gamification";
 import ConsumptionComparison from "../components/ConsumptionComparison";
 import { MdDashboard } from "react-icons/md";
 import { FaTimes, FaEye, FaUserPlus } from "react-icons/fa";
-import Sidebar from "../components/SideBar";
 import Residence from "../components/Residence";
+import ConsumptionComparisonByCategory from "../components/ConsumptionComparisonByCategory";
+import AverageConsumptionPerDevice from "../components/AverageConsumptionPerDevice";
+import ComparisonRange from "../components/ComparisonRange";
 import { AuthContext } from "../context/AuthContext";
+import { useParams } from 'react-router-dom';
 
 const SortableItem = ({ chart, toggleChartVisibility }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: chart.id });
@@ -35,7 +38,7 @@ const SortableItem = ({ chart, toggleChartVisibility }) => {
 };
 
 const Home = () => {
-  const { idUser } = useContext(AuthContext);
+  const { idUser } = useParams(); // Récupérer idUser depuis l'URL
   const navigate = useNavigate();
 
   const initialCharts = [
@@ -43,6 +46,10 @@ const Home = () => {
     { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser} /> },
     { id: "gamification", name: "Gamification", component: <Gamification /> },
     { id: "comparison", name: "Comparaison de Consommation", component: <ConsumptionComparison idUser={idUser} /> },
+    { id: "comparisonByCategory", name: "Comparaison de Consommation selon la categorie", component: <ConsumptionComparisonByCategory idUser={idUser} /> },
+    { id: "AverageConsumptionPerDevice", name: "Comparaison de Consommation des appareils", component: <AverageConsumptionPerDevice userId={idUser} /> },
+    { id: "ComparisonRange", name: "Comparaison de Consommation ", component: <ComparisonRange userId={idUser} /> },
+  
   ];
 
   const [visibleCharts, setVisibleCharts] = useState(initialCharts);
@@ -93,7 +100,7 @@ const Home = () => {
 
   return (
     <div className="flex bg-white text-gray-800 min-h-screen">
-      <Sidebar />
+      
       <div className="flex-1 p-10">
         {/* En-tête du tableau de bord */}
         <div className="flex justify-between items-center mb-8">
