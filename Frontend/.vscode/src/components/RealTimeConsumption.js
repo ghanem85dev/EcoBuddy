@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend } from "chart.js";
+import { useTheme } from "../context/ThemeContext";  // Import de useTheme
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 const RealTimeConsumption = ({ idUser }) => {
   const [data, setData] = useState({ labels: [], values: [] });
+  const { theme } = useTheme(); // Utilisation du thème actuel
 
   // Récupérer selectedResidence du localStorage
   const selectedResidence = localStorage.getItem("selectedResidence");
@@ -36,6 +38,11 @@ const RealTimeConsumption = ({ idUser }) => {
     return () => clearInterval(interval);
   }, [idUser, selectedResidence]);
 
+  // Définir les couleurs selon le thème
+  const chartColors = theme === "light" 
+    ? { borderColor: "#2563eb", backgroundColor: "rgba(37, 99, 235, 0.2)" }
+    : { borderColor: "#9333ea", backgroundColor: "rgba(147, 51, 234, 0.2)" };
+
   return (
     <div className="card col-span-1 md:col-span-2 lg:col-span-4">
       <div className="card-header">
@@ -49,8 +56,8 @@ const RealTimeConsumption = ({ idUser }) => {
               {
                 label: "Consommation (kWh)",
                 data: data.values,
-                borderColor: "#2563eb",
-                backgroundColor: "rgba(37, 99, 235, 0.2)",
+                borderColor: chartColors.borderColor, // Appliquer la couleur du bord selon le thème
+                backgroundColor: chartColors.backgroundColor, // Appliquer la couleur du fond selon le thème
                 fill: true,
                 tension: 0.4,
               },
@@ -72,7 +79,7 @@ const RealTimeConsumption = ({ idUser }) => {
             scales: {
               x: {
                 ticks: {
-                  color: "#475569",
+                  color: theme === "light" ? "#475569" : "#e5e7eb", // Définir les couleurs des ticks en fonction du thème
                 },
                 grid: {
                   display: false,
@@ -80,11 +87,11 @@ const RealTimeConsumption = ({ idUser }) => {
               },
               y: {
                 ticks: {
-                  color: "#475569",
+                  color: theme === "light" ? "#475569" : "#e5e7eb", // Définir les couleurs des ticks en fonction du thème
                   callback: (value) => `${value} kWh`,
                 },
                 grid: {
-                  color: "rgba(148, 163, 184, 0.2)",
+                  color: theme === "light" ? "rgba(148, 163, 184, 0.2)" : "rgba(55, 65, 81, 0.2)", // Ajuster la couleur du grid selon le thème
                 },
               },
             },

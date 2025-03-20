@@ -1,45 +1,32 @@
-import { createContext, useEffect, useState } from "react";
-import PropTypes from "prop-types";
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-const initialState = {
-    theme: "system",
-    setTheme: () => null,
+// Créer le contexte du thème
+const ThemeContext = createContext();
+
+// Hook personnalisé pour accéder au contexte du thème
+export const useTheme = () => {
+  return useContext(ThemeContext);
 };
 
-export const ThemeProviderContext = createContext(initialState);
+// Fournisseur de contexte pour envelopper l'application
+export const ThemeProvider = ({ children }) => {
+  // Initialisation du thème, on le récupère du localStorage ou on le définit par défaut en "light"
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
-export function ThemeProvider({ children, defaultTheme = "system", storageKey = "vite-ui-theme", ...props }) {
-    const [theme, setThemeState] = useState(() => localStorage.getItem(storageKey) || defaultTheme);
+  useEffect(() => {
+    // Sauvegarder le thème sélectionné dans le localStorage
+    localStorage.setItem('theme', theme);
+    // Appliquer le thème à la classe body pour gérer le mode clair/sombre
+    document.body.className = theme;
+  }, [theme]);
 
-    useEffect(() => {
-        const root = document.documentElement;
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
 
-        root.classList.remove("light", "dark");
-
-        if (theme === "system") {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            root.classList.add(systemTheme);
-        } else {
-            root.classList.add(theme);
-        }
-    }, [theme]);
-
-    const setTheme = (newTheme) => {
-        localStorage.setItem(storageKey, newTheme);
-        setThemeState(newTheme);
-    };
-
-    const value = { theme, setTheme };
-
-    return (
-        <ThemeProviderContext.Provider {...props} value={value}>
-            {children}
-        </ThemeProviderContext.Provider>
-    );
-}
-
-ThemeProvider.propTypes = {
-    children: PropTypes.node,
-    defaultTheme: PropTypes.string,
-    storageKey: PropTypes.string,
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 };

@@ -17,20 +17,19 @@ import Residence from "../components/Residence";
 import ConsumptionComparisonByCategory from "../components/ConsumptionComparisonByCategory";
 import { FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext"; // Import du context pour gérer le thème
+
 // 📌 Définition des cartes de charts
-
-
-// 📌 Composant pour chaque carte de graphique
 const SortableItem = ({ chart, toggleChartVisibility }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: chart.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      {...attributes} 
-      {...listeners} 
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       className="bg-[#1E293B] border border-gray-700 shadow-lg rounded-xl h-auto min-h-[300px] p-6 w-full mt-4"
     >
       <div className="flex justify-between items-center">
@@ -45,19 +44,22 @@ const SortableItem = ({ chart, toggleChartVisibility }) => {
 };
 
 const DashboardPage = () => {
+  const { theme, toggleTheme } = useTheme(); // Utilisation du contexte pour gérer le thème
   const { idUser } = useParams();
   const [visibleCharts, setVisibleCharts] = useState([]);
   const [hiddenCharts, setHiddenCharts] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+
   const initialCharts = [
     { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption idUser={idUser}/> },
-    { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser}/> },
+   // { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser}/> },
     { id: "gamification", name: "Gamification", component: <Gamification /> },
     { id: "comparison", name: "Comparaison de Consommation", component: <ConsumptionComparison idUser={idUser} /> },
     { id: "comparisonByCategory", name: "Comparaison de Consommation selon la categorie", component: <ConsumptionComparisonByCategory idUser={idUser} /> },
     { id: "ComparisonRange", name: "Comparaison de Consommation ", component: <ComparisonRange userId={idUser} /> },
   ];
+
   useEffect(() => {
     const fetchPreferences = async () => {
       try {
@@ -110,7 +112,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] transition-colors flex">
+    <div className={`min-h-screen bg-${theme === 'light' ? 'lightbg' : 'darkbg'} transition-colors flex`}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'ml-[50px] w-[calc(100%-50px)]' : 'ml-[250px] w-[calc(100%-250px)]'} p-4`}>
         <Header collapsed={collapsed} setCollapsed={setCollapsed} idUser={idUser} />

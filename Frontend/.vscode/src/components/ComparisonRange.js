@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useTheme } from "../context/ThemeContext"; // Importer le hook pour obtenir le thème
 
 const ComparisonRange = ({ userId }) => {
   const [startDate, setStartDate] = useState("");
@@ -8,6 +9,16 @@ const ComparisonRange = ({ userId }) => {
   const [consumptionData, setConsumptionData] = useState(null);
 
   const selectedResidence = localStorage.getItem("selectedResidence") || "0"; // Récupération de la résidence
+
+  const { theme } = useTheme(); // Utilisation du thème actuel
+
+  // Définir les couleurs en fonction du thème
+  const backgroundColor = theme === "light" ? "bg-white" : "bg-[#1a2e45]"; // Fond général
+  const textColor = theme === "light" ? "text-gray-800" : "text-white"; // Couleur du texte
+  const inputBgColor = theme === "light" ? "bg-gray-100" : "bg-[#0F172A]"; // Couleur de fond des inputs
+  const inputTextColor = theme === "light" ? "text-gray-800" : "text-white"; // Couleur du texte des inputs
+  const borderColor = theme === "light" ? "border-blue-500" : "border-blue-600"; // Couleur des bordures
+  const focusRingColor = theme === "light" ? "focus:ring-blue-300" : "focus:ring-blue-500"; // Couleur de la bague de focus
 
   const getFirstDayOfPreviousMonth = () => {
     const date = new Date();
@@ -70,7 +81,7 @@ const ComparisonRange = ({ userId }) => {
   }, [startDate, endDate, selectedResidence]);
 
   return (
-    <div className="bg-[#1a2e45] text-white p-6 rounded-2xl shadow-lg">
+    <div className={`${backgroundColor} ${textColor} p-6 rounded-2xl shadow-lg`}>
       <h2 className="text-xl font-semibold text-blue-300 mb-4">
         Comparaison de Consommation sur une Période
       </h2>
@@ -81,7 +92,7 @@ const ComparisonRange = ({ userId }) => {
             type="date"
             value={startDate}
             onChange={handleStartDateChange}
-            className="bg-[#0F172A] text-white p-2 rounded-md border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className={`${inputBgColor} ${inputTextColor} p-2 rounded-md border ${borderColor} focus:outline-none ${focusRingColor}`}
           />
         </div>
         <div className="flex flex-col">
@@ -90,14 +101,14 @@ const ComparisonRange = ({ userId }) => {
             type="date"
             value={endDate}
             onChange={handleEndDateChange}
-            className="bg-[#0F172A] text-white p-2 rounded-md border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className={`${inputBgColor} ${inputTextColor} p-2 rounded-md border ${borderColor} focus:outline-none ${focusRingColor}`}
           />
         </div>
       </div>
       {error && <div className="text-red-500 font-semibold">{error}</div>}
 
       {consumptionData && (
-        <div className="bg-[#0F172A] p-4 rounded-md mt-4 border border-blue-600">
+        <div className={`${inputBgColor} p-4 rounded-md mt-4 border ${borderColor}`}>
           <h3 className="text-lg font-semibold text-blue-300">Résultats :</h3>
           {selectedResidence === "0" ? (
             <p className="mt-2">
