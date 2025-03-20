@@ -1,16 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoSun } from "react-icons/go";
 import { FaRegMoon, FaRegBell } from "react-icons/fa";
 import { FiChevronsLeft } from "react-icons/fi";
-import { FaSearch } from "react-icons/fa";
-import profileImg from "../assets/profile-image.jpg";
+import { ChevronDown } from "lucide-react";
 import PropTypes from "prop-types";
 import { useTheme } from "../context/ThemeContext";
+import "../styles/Header.css";
 
 export const Header = ({ collapsed, setCollapsed, idUser }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("ENG");
 
   const handleToggleSidebar = () => {
     if (setCollapsed) {
@@ -18,51 +20,85 @@ export const Header = ({ collapsed, setCollapsed, idUser }) => {
     }
   };
 
+  const languages = [
+    { code: "ENG", label: "English" },
+    { code: "ESP", label: "Spanish" },
+    { code: "FRA", label: "French" },
+  ];
+
+  const handleLanguageSelect = (language) => {
+    setSelectedLanguage(language.code);
+    setIsOpen(false); // Ferme le menu après sélection
+  };
+
   const headerBgColor = theme === "light" ? "bg-white" : "bg-slate-900";
-  const textColor = theme === "light" ? "text-gray-800" : "text-white";
   const iconColor = theme === "light" ? "text-gray-500" : "text-gray-300";
-  const borderColor = theme === "light" ? "border-gray-300" : "border-gray-700";
-  const focusRingColor = theme === "light" ? "focus:ring-blue-300" : "focus:ring-blue-500";
 
   return (
     <header
       className={`fixed top-0 z-50 flex h-[60px] items-center justify-between 
-        ${headerBgColor} px-4 shadow-md transition-all duration-300 
-        ${collapsed ? "w-full pl-14" : "left-[280px] w-[calc(100%-280px)]"} 
-        rounded-lg`}  // Ajustement de la largeur en fonction de la sidebar
-  
+      ${headerBgColor} px-4 shadow-md transition-all duration-300 
+      ${collapsed ? "w-full pl-14" : "left-[280px] w-[calc(100%-280px)]"} 
+      rounded-lg`}
     >
-      {/* Bouton pour ouvrir/fermer la sidebar */}
-      <button
-        className="absolute left-6 btn-ghost size-10 z-50"
-        onClick={handleToggleSidebar}
-      >
-        <FiChevronsLeft className={`transform transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
-      </button>
-
-      {/* Barre de recherche */}
-      <div className="flex items-center gap-x-3 pl-20">
-        <div className={`input flex items-center gap-2 border ${borderColor} rounded-lg px-3 py-2 dark:${borderColor}`}>
-          <FaSearch className={`${iconColor}`} />
-          <input
-            type="text"
-            placeholder="Search..."
-            className={`w-full bg-transparent ${textColor} focus:outline-none ${focusRingColor}`}
-          />
+      <div className="flex justify-between w-full">
+        {/* Sidebar Toggle & Search */}
+        <div className="flex items-center">
+          <button className="btn-ghost size-10 z-50" onClick={handleToggleSidebar}>
+            <FiChevronsLeft className={`transform transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
+          </button>
+          <div className="search-container flex-1 max-w-md">
+            <input type="text" placeholder="Search" className="search-input w-full" />
+            <span className="search-icon">🔍</span>
+          </div>
         </div>
-      </div>
 
-      {/* Icônes et profil */}
-      <div className="flex items-center gap-x-3 ml-[16px]"> {/* Ajouté ml-[16px] */}
-        <button className="btn-ghost size-10" onClick={toggleTheme}>
-          {theme === "light" ? <FaRegMoon size={20} className={`${iconColor}`} /> : <GoSun size={20} className={`${iconColor}`} />}
-        </button>
-        <button className="btn-ghost size-10">
-          <FaRegBell size={20} className={`${iconColor}`} />
-        </button>
-        <button className="size-10 overflow-hidden rounded-full" onClick={() => navigate(`/UserSettings/${idUser}`)}>
-          <img src={profileImg} alt="profile" className="size-full object-cover" />
-        </button>
+        {/* Icons & Profile */}
+        <div className="flex items-center justify-between gap-x-4">
+          <button className="btn-ghost size-10 flex items-center justify-center" onClick={toggleTheme}>
+            {theme === "light" ? <FaRegMoon size={20} className={iconColor} /> : <GoSun size={20} className={iconColor} />}
+          </button>
+
+          {/* Sélecteur de langue */}
+          <div className="language-selector">
+            <button className="language-selector-button" onClick={() => setIsOpen(!isOpen)}>
+              <span>{selectedLanguage}</span>
+              <ChevronDown className="chevron-icon" />
+            </button>
+            {isOpen && (
+              <ul className="language-dropdown">
+                {languages.map((language) => (
+                  <li key={language.code} className="language-option" onClick={() => handleLanguageSelect(language)}>
+                    {language.label} ({language.code})
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Notifications & Messages */}
+          <button className="messenger-btn">
+            <span className="message-icon">💬</span>
+          </button>
+          <button className="notification-btn">
+            <span className="bell-icon">🔔</span>
+            <span className="notification-badge">2</span>
+          </button>
+
+          {/* Profil */}
+          <div className="profile-container">
+            <img
+              src="https://th.bing.com/th/id/R.848b893b43c813691190b8324cb8ace4?rik=V21wYc0FSlE8vQ&pid=ImgRaw&r=0"
+              alt="Profile"
+              className="profile-img"
+              onClick={() => navigate(`/UserSettings/${idUser}`)} // Redirection
+              style={{ cursor: "pointer" }} // Indique que c'est cliquable
+            />
+            <span className="profile-name">Grace Stanley</span>
+          </div>
+
+        
+        </div>
       </div>
     </header>
   );
@@ -71,5 +107,5 @@ export const Header = ({ collapsed, setCollapsed, idUser }) => {
 Header.propTypes = {
   collapsed: PropTypes.bool,
   setCollapsed: PropTypes.func,
-  idUser: PropTypes.string,
+  idUser: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Accepte string ou number
 };

@@ -110,10 +110,12 @@ const DashboardPage = () => {
       savePreferences(newOrder, hiddenCharts);
     }
   };
+  const [activePage, setActivePage] = useState("Tableau de bord");
 
-  return (
+  return ( 
     <div className={`min-h-screen bg-${theme === 'light' ? 'lightbg' : 'darkbg'} transition-colors flex`}>
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <Sidebar activePage={activePage}
+        setActivePage={setActivePage} collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'ml-[50px] w-[calc(100%-50px)]' : 'ml-[250px] w-[calc(100%-250px)]'} p-4`}>
         <Header collapsed={collapsed} setCollapsed={setCollapsed} idUser={idUser} />
         <div className="h-[calc(100vh-60px)] overflow-y-auto p-6">

@@ -1,12 +1,10 @@
 import React, { forwardRef, useState } from "react";
-import { NavLink } from "react-router-dom";
-import PropTypes from "prop-types";
 import {
-    IoBarChartSharp,
-    IoTimerSharp,
-    IoNotifications,
-    IoGameControllerOutline,
-    IoSettings,
+  IoBarChartSharp,
+  IoTimerSharp,
+  IoNotifications,
+  IoGameControllerOutline,
+  IoSettings,
 } from "react-icons/io5";
 import { TbDeviceAnalytics } from "react-icons/tb";
 import { MdDeviceThermostat } from "react-icons/md";
@@ -14,107 +12,187 @@ import { LuThermometerSun } from "react-icons/lu";
 import { FaMoneyCheckAlt, FaUserPlus } from "react-icons/fa";
 import { FiAlertTriangle } from "react-icons/fi";
 import { useTheme } from "../context/ThemeContext";
-import { cn } from "../utils/cn";
-import { TbHomeBolt } from "react-icons/tb";
+import { NavLink, useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
+import "../styles/Sidebar.css";
+import { LogOutIcon } from "lucide-react";
 
+// Navbar links
 export const navbarLinks = [
-    {
-        links: [
-            { label: "Tableau de bord", icon: IoBarChartSharp, path: "/dashboard" },
-            { label: "Consommation en temps réel", icon: IoTimerSharp, path: "/realtime" },
-            { label: "Appareils connectés", icon: TbDeviceAnalytics, path: "/devices" },
-        ],
-    },
-    {
-        links: [
-            { label: "Suivi énergétique", icon: MdDeviceThermostat, path: "/energy" },
-            { label: "Simulateur solaire", icon: LuThermometerSun, path: "/solar" },
-        ],
-    },
-    {
-        links: [
-            { label: "Notifications", icon: IoNotifications, path: "/notifications" },
-            { label: "Alertes & Historique", icon: FiAlertTriangle, path: "/alerts" },
-            { label: "Paiements", icon: FaMoneyCheckAlt, path: "/payments" },
-            { label: "Invitations", icon: FaUserPlus, path: "/invite" },
-            { label: "Gamification", icon: IoGameControllerOutline, path: "/gamification" },
-            { label: "Paramètres généraux", icon: IoSettings, path: "/settings" },
-        ],
-    },
+  {
+    links: [
+      { label: "Tableau de bord", icon: IoBarChartSharp, path: "/dashboard" },
+      {
+        label: "Consommation",
+        icon: IoTimerSharp,
+        path: "/realtime",
+      },
+      {
+        label: "Appareils connectés",
+        icon: TbDeviceAnalytics,
+        path: "/devices",
+      },
+    ],
+  },
+  {
+    links: [
+      { label: "Suivi énergétique", icon: MdDeviceThermostat, path: "/energy" },
+      { label: "Simulateur solaire", icon: LuThermometerSun, path: "/solar" },
+    ],
+  },
+  {
+    links: [
+      { label: "Notifications", icon: IoNotifications, path: "/notifications" },
+      { label: "Alertes & Historique", icon: FiAlertTriangle, path: "/alerts" },
+      { label: "Paiements", icon: FaMoneyCheckAlt, path: "/payments" },
+      { label: "Invitations", icon: FaUserPlus, path: "/invite" },
+      {
+        label: "Gamification",
+        icon: IoGameControllerOutline,
+        path: "/gamification",
+      },
+      { label: "Paramètres généraux", icon: IoSettings, path: "/settings" },
+      { label: "Logout", icon: LogOutIcon, path: "/logout" },
+    ],
+  },
 ];
 
-const Sidebar = forwardRef(({ collapsed }, ref) => {
+// Sidebar component
+const Sidebar = forwardRef(
+  (
+    { collapsed, activePage, setActivePage, isOpenSidebar, setIsOpenSidebar },
+    ref
+  ) => {
     const { theme } = useTheme();
     const [isCollapsed, setIsCollapsed] = useState(collapsed);
+    const navigate = useNavigate();
+
+    // Flatten the nested navbarLinks structure for rendering
+    const allLinks = navbarLinks.flatMap((section) => section.links);
+
+    // Handle active page changes and propagate to parent if needed
+    const handleSetActivePage = (page) => {
+      setActivePage(page);
+      if (setActivePage) {
+        setActivePage(page);
+      }
+    };
+
+    const handleNavigation = (item) => {
+      handleSetActivePage(item.label);
+      navigate(item.path); // Make sure to import navigate from react-router-dom
+    };
+
+    // Use effect to initialize default active page
+    React.useEffect(() => {
+      if (!activePage) {
+        handleSetActivePage("Tableau de bord");
+      }
+    }, []);
 
     React.useEffect(() => {
-        setIsCollapsed(collapsed);
+      setIsCollapsed(collapsed);
     }, [collapsed]);
 
     return (
-        <aside
-            ref={ref}
-            className={cn(
-                "fixed z-50 flex h-full flex-col transition-all duration-300",
-                "bg-[#3D4A84] text-white rounded-r-3xl shadow-lg",
-                isCollapsed ? "w-[80px]" : "w-[260px]"
-            )}
-        >
-            {/* HEADER SIDEBAR */}
-            <div className="flex flex-col items-center py-6">
-                <div className="flex items-center gap-x-3">
-                    <TbHomeBolt className="text-white" size={28} />
-                    {!isCollapsed && <p className="text-lg font-semibold">MyEnergyHub</p>}
+      <div
+        className={`sidebar ${!collapsed ? "collapsed-sidebar" : ""}`}
+        ref={ref}
+      >
+        {/* HEADER SIDEBAR */}
+        {!collapsed ? (
+          <div className="sb-logo-icon-titles">
+            <div className="sb-logo">
+              <div className="sidebar-header">
+                <div className="sidebar-logo">
+                  <span>My</span>
                 </div>
+                {!collapsed && <h2 className="sidebar-title">EnergyHub</h2>}
+              </div>
             </div>
+          </div>
+        ) : (
+          <div className="hidden"></div>
+        )}
 
-            {/* NAVIGATION */}
-            <div className="flex w-full flex-col gap-y-2 overflow-y-auto p-3">
-                {navbarLinks.map((navbarLink, index) => (
-                    <nav key={index} className="sidebar-group">
-                        {navbarLink.links.map((link) => (
-                            <NavLink
-                                key={link.label}
-                                to={link.path}
-                                className={cn(
-                                    "flex items-center gap-x-3 px-4 py-3 text-sm font-medium transition-all relative",
-                                    "hover:bg-white hover:text-[#3D4A84] rounded-l-full"
-                                )}
-                            >
-                                {/* ICONES */}
-                                {React.createElement(link.icon, {
-                                    size: 22,
-                                    className: "text-white",
-                                })}
-                                {!isCollapsed && <p className="ml-2">{link.label}</p>}
+        {/* NAVIGATION */}
+        <nav className="sidebar-nav-icons">
+          <ul
+            className={`sidebar-icons ${
+              collapsed
+                ? "collapsed-sidebar-icons"
+                : "sidebar-nav-icons sidebar-icons"
+            }`}
+          >
+            {allLinks.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <li key={index}>
+                  <button
+                    onClick={() => handleSetActivePage(item.label)}
+                    className={`sidebar-nav-button ${
+                      activePage === item.label ? "active" : ""
+                    }`}
+                  >
+                  <div className="icon-line text-white">
+                      <Icon
+                        className={`side-bar-icon ${
+                          !collapsed ? "side-bar-icon" : "side-bar-icon-collapsed"
+                        }`}
+                      />
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
 
-                                {/* COURBES EXTERNES */}
-                                <span className="absolute right-0 top-[-50px] w-[50px] h-[50px] bg-transparent rounded-full shadow-[35px_35px_0_10px_var(--white)] pointer-events-none" />
-                                <span className="absolute right-0 bottom-[-50px] w-[50px] h-[50px] bg-transparent rounded-full shadow-[35px_-35px_0_10px_var(--white)] pointer-events-none" />
-                            </NavLink>
-                        ))}
-                    </nav>
-                ))}
-            </div>
+          {/* Title with labels */}
+          {!collapsed ? (
+            <ul className="sidebar-title">
+              {allLinks.map((item, index) => (
+                <li className="last-title" key={index}>
+                  <button
+                    onClick={() => handleSetActivePage(item.label)}
+                    className={`sidebar-nav-button ${
+                      activePage === item.label ? "active-title" : ""
+                    }`}
+                  >
+                    <span className="menu-text">{item.label}</span>
 
-            {/* BOUTON LOGOUT */}
-            <div className="mt-auto p-3">
-                <NavLink
-                    to="/logout"
-                    className="flex items-center gap-x-3 px-4 py-3 text-sm font-medium transition-all hover:bg-white hover:text-[#3D4A84] rounded-l-full"
-                >
-                    <IoSettings size={22} className="text-white" />
-                    {!isCollapsed && <p className="ml-2">Log Out</p>}
-                </NavLink>
-            </div>
-        </aside>
+                    <div
+                      className={`sidebar-nav-button ${
+                        activePage === item.label ? "curved-border" : ""
+                      }`}
+                    ></div>
+                    <div
+                      className={`sidebar-nav-button ${
+                        activePage === item.label ? "curved-border2" : ""
+                      }`}
+                    ></div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="hidden"></ul>
+          )}
+
+          
+        </nav>
+      </div>
     );
-});
+  }
+);
 
 Sidebar.displayName = "Sidebar";
 
 Sidebar.propTypes = {
-    collapsed: PropTypes.bool,
+  collapsed: PropTypes.bool,
+  activePage: PropTypes.string,
+  setActivePage: PropTypes.func,
+  isOpenSidebar: PropTypes.bool,
+  setIsOpenSidebar: PropTypes.func,
 };
 
 export { Sidebar };

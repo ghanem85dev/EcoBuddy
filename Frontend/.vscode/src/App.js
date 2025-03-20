@@ -31,7 +31,7 @@ const App = () => {
         <Route path="/maps" element={<Maps />} />
         
         <Route path="/Sites-settings/:id" element={<SitesSettings />} />
-        <Route path="/dashboard/:idUser" element={<DashboardPage />} />
+        <Route path="/DashboardPage/:idUser" element={<DashboardPage />} />
         <Route path="/UserSettings/:idUser" element={<UserSettings />} />
         <Route path="/invite" element={<InviteUser />} />
         <Route path="/accept-invite/:token" element={<AcceptInvite />} />
