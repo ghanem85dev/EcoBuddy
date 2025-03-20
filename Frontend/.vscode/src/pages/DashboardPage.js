@@ -15,6 +15,7 @@ import Gamification from "../components/Gamification";
 import ComparisonRange from "../components/ComparisonRange";
 import Residence from "../components/Residence";
 import ConsumptionComparisonByCategory from "../components/ConsumptionComparisonByCategory";
+import ConsommationCategorie from "../components/ConsommationCategorie";
 import { FaUserPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 // 📌 Définition des cartes de charts
@@ -51,12 +52,14 @@ const DashboardPage = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const initialCharts = [
-    { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption idUser={idUser}/> },
-    { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser}/> },
+     { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption idUser={idUser}/> },
+    // { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser}/> },
     { id: "gamification", name: "Gamification", component: <Gamification /> },
-    { id: "comparison", name: "Comparaison de Consommation", component: <ConsumptionComparison idUser={idUser} /> },
-    { id: "comparisonByCategory", name: "Comparaison de Consommation selon la categorie", component: <ConsumptionComparisonByCategory idUser={idUser} /> },
+    // { id: "comparison", name: "Comparaison de Consommation", component: <ConsumptionComparison idUser={idUser} /> },
+   { id: "comparisonByCategory", name: "Comparaison de Consommation selon la categorie", component: <ConsumptionComparisonByCategory idUser={idUser} /> },
     { id: "ComparisonRange", name: "Comparaison de Consommation ", component: <ComparisonRange userId={idUser} /> },
+    { id: "ConsommationCategorie", name: "Consommation par categorie", component: <ConsommationCategorie/> },
+  
   ];
   useEffect(() => {
     const fetchPreferences = async () => {

@@ -9,10 +9,18 @@ const ConsumptionComparisonByCategory = ({ idUser }) => {
   const [consumptionData, setConsumptionData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
 
   const fetchConsumptionData = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/Comparison/category/${idUser}`);
+      console.log("Fetching data with dates:", startDate, endDate);
+      const response = await axios.get(`http://localhost:8000/Comparison/category/${idUser}`, {
+        params: {
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+        },
+      });
       setConsumptionData(response.data);
     } catch (error) {
       console.error("Erreur API :", error);
@@ -28,13 +36,25 @@ const ConsumptionComparisonByCategory = ({ idUser }) => {
       const interval = setInterval(fetchConsumptionData, 5000);
       return () => clearInterval(interval);
     }
-  }, [idUser]);
+  }, [idUser, startDate, endDate]);
 
   if (loading) return <div className="text-blue-400 font-semibold">Chargement...</div>;
   if (error) return <div className="text-purple-400 font-semibold">{error}</div>;
 
   const residences = [...new Set(consumptionData.map(item => item.siteNom))];
   const categories = [...new Set(consumptionData.map(item => item.categorie))];
+
+  const handleStartDateChange = (e) => {
+    const date = new Date(e.target.value);
+    console.log("Date de début sélectionnée :", date);
+    setStartDate(date);
+  };
+
+  const handleEndDateChange = (e) => {
+    const date = new Date(e.target.value);
+    console.log("Date de fin sélectionnée :", date);
+    setEndDate(date);
+  };
 
   const consumptionByResidence = residences.map(residence => {
     const categoriesForResidence = categories.map(categorie => {
@@ -52,7 +72,7 @@ const ConsumptionComparisonByCategory = ({ idUser }) => {
       return {
         label: residence.residence,
         data: residence.categories.map(item => item.totalConsumption),
-        backgroundColor: index % 2 === 0 ? "#4F46E5" : "#9333EA", 
+        backgroundColor: index % 2 === 0 ? "#4F46E5" : "#9333EA",
         borderColor: "#312E81",
         borderWidth: 1,
         borderRadius: 10,
@@ -77,6 +97,26 @@ const ConsumptionComparisonByCategory = ({ idUser }) => {
   return (
     <div className="bg-[#1a2e45] shadow-lg rounded-2xl p-6 text-white">
       <h2 className="text-xl font-semibold text-blue-300 mb-4">Comparaison de Consommation par Catégorie</h2>
+      <div className="flex space-x-4 mb-4">
+        <div className="flex flex-col">
+          <label className="text-blue-200">Date de début :</label>
+          <input
+            type="date"
+            value={startDate.toISOString().split('T')[0]}
+            onChange={handleStartDateChange}
+            className="bg-[#0F172A] text-white p-2 rounded-md border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-blue-200">Date de fin :</label>
+          <input
+            type="date"
+            value={endDate.toISOString().split('T')[0]}
+            onChange={handleEndDateChange}
+            className="bg-[#0F172A] text-white p-2 rounded-md border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          />
+        </div>
+      </div>
       <div className="w-full h-64">
         <Bar data={data} options={options} />
       </div>

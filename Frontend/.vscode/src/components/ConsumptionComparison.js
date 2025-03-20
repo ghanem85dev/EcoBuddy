@@ -13,7 +13,7 @@ const ConsumptionComparison = ({ idUser }) => {
   // Fonction pour récupérer les données périodiquement
   const fetchConsumptionData = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/Comparison/user/${idUser}`);
+      const response = await axios.get(`http://localhost:8000/Comparison/total/${idUser}`);
       setConsumptionData(response.data);
     } catch (error) {
       console.error("Erreur API :", error);
