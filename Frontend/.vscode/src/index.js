@@ -13,6 +13,7 @@ import { IoBarChartSharp, IoTimerSharp, IoNotifications, IoGameControllerOutline
 import { MdDeviceThermostat } from "react-icons/md";
 import { LuThermometerSun } from "react-icons/lu";
 import { FaMoneyCheckAlt } from "react-icons/fa";
+import { CoordinateProvider } from './context/CoordinateContext';
 
 /* global FB */
 
@@ -44,9 +45,11 @@ root.render(
   <GoogleOAuthProvider clientId="104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com">
     <AuthProvider>
       <ThemeProvider>
+      <CoordinateProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>
+        </CoordinateProvider>
       </ThemeProvider>
     </AuthProvider>
   </GoogleOAuthProvider>

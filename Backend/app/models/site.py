@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, JSON
+from sqlalchemy import Column, String, Integer, ForeignKey, JSON, Float
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel
 from .models import Base
@@ -9,6 +9,8 @@ class Site(Base):
     idSite = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nom = Column(String, nullable=False)
     adresse = Column(String, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longtitude = Column(Float, nullable=True)
     idCategorieSite = Column(Integer, ForeignKey("Categorie_Site.idCategorieSite"), nullable=False)
     idUser = Column(Integer, ForeignKey("users.id"), nullable=False)
 

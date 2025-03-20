@@ -58,6 +58,8 @@ def get_user_sites(user_id: int, db: Session = Depends(get_db)):
 class NewSite(BaseModel):
     nom: str
     adresse: str
+    latitude:float
+    longtitude:float
 
 
 @router.post("/sites/{user_id}/{categorie_id}")
@@ -66,6 +68,8 @@ def add_site(user_id: int,categorie_id: int,newSite: NewSite, db: Session = Depe
     new_site = Site(
         nom=newSite.nom,
         adresse=newSite.adresse,
+        latitude=newSite.latitude,
+        longtitude=newSite.longtitude,
         idCategorieSite=categorie_id,
         idUser=user_id
     )
@@ -82,6 +86,8 @@ def update_site(site_id: int,categorie_id: int,newSite: NewSite, db: Session = D
     db_site.nom = newSite.nom
     db_site.adresse = newSite.adresse
     db_site.idCategorieSite = categorie_id
+    db_site.latitude=newSite.latitude
+    db_site.longtitude=newSite.longtitude
     db.commit()
     return {"message": "Site modifié avec succès."}
 
@@ -93,3 +99,14 @@ def update_site(site_id: int, db: Session = Depends(get_db)):
     db.delete(db_site)
     db.commit()
     return {"message": "Site supprimé avec succès."}
+@router.get("/site/position/{site_id}")
+def position_site(site_id:int, db: Session = Depends(get_db)):
+    db_site = db.query(Site).filter(Site.idSite == site_id).first()
+    if not db_site:
+        raise HTTPException(status_code=404, detail="Site not found")
+    site_position={
+        "latitude":db_site.latitude,
+        "longtitude":db_site.longtitude
+    }
+    return site_position
+
