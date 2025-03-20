@@ -64,6 +64,7 @@ const Login = () => {
       alert("Erreur lors de la réinitialisation !");
     }
   };
+
   const handleSuccess = (response) => {
     const id_token = response.credential;
     fetch("http://localhost:8000/auth/google-login", {
@@ -88,6 +89,7 @@ const Login = () => {
         console.error("Error:", error);
       });
   };
+
   const handleFacebookLogin = () => {
     window.FB.login(
       (response) => {
@@ -120,7 +122,7 @@ const Login = () => {
     <div className="flex h-screen">
       {/* Section Formulaire */}
       <div className="w-1/2 flex flex-col justify-center px-16">
-        <h2 className="text-5xl font-bold text-[#6eb1e6] mb-4 text-center">Connexion</h2>
+        <h2 className="text-5xl font-bold text-[#80a4fc] mb-4 text-center">Connexion</h2>
         <p className="text-gray-500 mb-6 text-center">
           Accédez à votre tableau de bord et surveillez votre consommation énergétique.
         </p>
@@ -154,7 +156,7 @@ const Login = () => {
             {/* Ligne séparatrice */}
             <div className="flex items-center my-4">
               <hr className="flex-grow border-gray-300" />
-              <span className="px-3 text-[#6eb1e6] font-semibold text-sm">Ou connectez-vous avec votre e-mail</span>
+              <span className="px-3 text-[#80a4fc] font-semibold text-sm">Ou connectez-vous avec votre e-mail</span>
               <hr className="flex-grow border-gray-300" />
             </div>
 
@@ -185,7 +187,7 @@ const Login = () => {
               {/* Bouton Connexion */}
               <button
                 type="submit"
-                className="w-full py-3 rounded-lg text-white font-bold text-lg bg-[#6eb1e6] hover:bg-[#5a9ace] transition"
+                className="w-full py-3 rounded-lg text-white font-bold text-lg bg-[#80a4fc] hover:bg-[#5a9ace] transition"
               >
                 Se connecter
               </button>
@@ -193,14 +195,14 @@ const Login = () => {
               <p className="text-center">
                 <button
                   onClick={() => setIsResettingPassword(true)}
-                  className="text-[#6eb1e6] font-semibold hover:text-[#5a9ace] transition"
+                  className="text-[#80a4fc] font-semibold hover:text-[#5a9ace] transition"
                 >
                   Mot de passe oublié ?
                 </button>
               </p>
               <p className="text-center mt-4 text-gray-500">
                 Vous n'avez pas encore de compte ?{" "}
-                <Link to="/register" className="text-[#6eb1e6] font-semibold hover:text-[#5a9ace] transition">
+                <Link to="/register" className="text-[#80a4fc] font-semibold hover:text-[#5a9ace] transition">
                   Inscrivez-vous ici
                 </Link>
               </p>
@@ -221,7 +223,7 @@ const Login = () => {
                   onChange={(e) => setResetEmail(e.target.value)}
                 />
                 <button
-                  className="bg-[#6eb1e6] text-white p-3 rounded-lg w-full font-bold hover:bg-[#5a9ace] transition"
+                  className="bg-[#80a4fc] text-white p-3 rounded-lg w-full font-bold hover:bg-[#5a9ace] transition"
                   type="submit"
                 >
                   Envoyer le lien
@@ -256,7 +258,7 @@ const Login = () => {
       </div>
 
       {/* Section Illustration */}
-      <div className="w-1/2 flex items-center justify-center bg-[#9fe4f4]">
+      <div className="w-1/2 flex items-center justify-center">
         <img src={mdp} alt="Illustration Connexion" className="max-w-md object-contain" />
       </div>
     </div>

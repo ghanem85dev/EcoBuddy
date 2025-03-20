@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTheme } from "../context/ThemeContext"; // Importer le hook pour obtenir le thème
 
 const AverageConsumptionPerDevice = ({ userId }) => {
   const [averageConsumption, setAverageConsumption] = useState([]);
@@ -7,6 +8,12 @@ const AverageConsumptionPerDevice = ({ userId }) => {
   const [error, setError] = useState(null);
 
   const siteId = localStorage.getItem('selectedResidence');
+  const { theme } = useTheme(); // Utilisation du thème actuel
+
+  // Définir les couleurs en fonction du thème
+  const tableHeaderBgColor = theme === "light" ? "bg-gray-200" : "bg-gray-800"; // Fond du header de tableau
+  const tableRowBgColor = theme === "light" ? "bg-white" : "bg-gray-900"; // Fond des lignes du tableau
+  const textColor = theme === "light" ? "text-gray-800" : "text-gray-200"; // Couleur du texte
 
   useEffect(() => {
     // Fonction pour récupérer la consommation moyenne par appareil
@@ -37,31 +44,31 @@ const AverageConsumptionPerDevice = ({ userId }) => {
   }, [userId, siteId]);
 
   if (loading) {
-    return <div>Chargement des données...</div>;
+    return <div className={`${textColor}`}>Chargement des données...</div>;
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className={`${textColor}`}>{error}</div>;
   }
 
   return (
-    <div>
-      <h2>Consommation Moyenne par Appareil</h2>
+    <div className={`p-4 ${textColor}`}>
+      <h2 className="text-xl font-semibold mb-4">Consommation Moyenne par Appareil</h2>
       {averageConsumption.length === 0 ? (
         <p>Aucune donnée trouvée pour la consommation moyenne des appareils.</p>
       ) : (
-        <table>
-          <thead>
+        <table className="min-w-full">
+          <thead className={tableHeaderBgColor}>
             <tr>
-              <th>Appareil</th>
-              <th>Consommation Moyenne (kWh)</th>
+              <th className="py-2 px-4 text-left">Appareil</th>
+              <th className="py-2 px-4 text-left">Consommation Moyenne (kWh)</th>
             </tr>
           </thead>
           <tbody>
             {averageConsumption.map((item, index) => (
-              <tr key={index}>
-                <td>{item.appareil}</td>
-                <td>{item.average_consumption.toFixed(2)}</td>
+              <tr key={index} className={tableRowBgColor}>
+                <td className="py-2 px-4">{item.appareil}</td>
+                <td className="py-2 px-4">{item.average_consumption.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>

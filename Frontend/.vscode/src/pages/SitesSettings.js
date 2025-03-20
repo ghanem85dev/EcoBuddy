@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Remplace useHistory par useNavigate
 import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { FaHome } from "react-icons/fa";
 import { motion } from "framer-motion";
 import residenceImage from "../assets/residence.png"; // Assurez-vous que l'image est correcte
-
+import { PiMapPinArea } from "react-icons/pi";
+import { useTheme } from "../context/ThemeContext";
 const SitesSettings = () => {
   const { id } = useParams();
+  const navigate = useNavigate();  // Remplace useHistory par useNavigate
   const [residences, setResidences] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [newResidence, setNewResidence] = useState({ nom: '', adresse: '' });
+  const [newResidence, setNewResidence] = useState({ nom: '', adresse: '', location: '' });
   const [showForm, setShowForm] = useState(false);
   const [editingResidence, setEditingResidence] = useState(null);
-
+  const { theme, toggleTheme } = useTheme();
   // Récupérer la liste des résidences
+  const bgColor = theme === "dark" ? "bg-[#08112F] text-white" : "bg-white text-[#003366]";
+  const cardBgColor = theme === "dark" ? "bg-[#5A77DF] text-white" : "bg-[#f0faff] text-[#003366]";
+  const buttonBg = theme === "dark" ? "bg-[#5A77DF]" : "bg-[#003366]";
   const fetchResidences = async () => {
     if (!id) {
       setError('ID utilisateur manquant');
@@ -56,7 +61,7 @@ const SitesSettings = () => {
 
   const handleModify = (residence) => {
     setEditingResidence(residence);
-    setNewResidence({ nom: residence.nom, adresse: residence.adresse });
+    setNewResidence({ nom: residence.nom, adresse: residence.adresse, location: residence.location });
     setShowForm(true);
   };
 
@@ -86,12 +91,17 @@ const SitesSettings = () => {
       // Recharger les résidences après l'ajout ou la modification
       fetchResidences();
 
-      setNewResidence({ nom: '', adresse: '' });
+      setNewResidence({ nom: '', adresse: '', location: '' });
       setEditingResidence(null);
       setShowForm(false);
     } catch (error) {
       setError(error.message);
     }
+  };
+
+  // Redirection vers le composant Maps
+  const handleGoToMap = (site) => {
+    navigate('/maps', { state: { adresse: site.adresse } });  // Utilisation de 'navigate' au lieu de 'history.push'
   };
 
   return (
@@ -141,6 +151,7 @@ const SitesSettings = () => {
                 transition={{ duration: 0.5 }}
                 className="bg-[#f0faff] p-5 rounded-xl shadow-lg border border-gray-300 hover:shadow-2xl transition-all flex justify-between items-center"
               >
+                {/* Section d'information de la résidence */}
                 <div className="flex items-center gap-4">
                   <FaHome className="text-3xl text-[#003366]" />
                   <div>
@@ -148,52 +159,81 @@ const SitesSettings = () => {
                     <p className="text-sm text-[#0055A4]">{site.adresse}</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <button onClick={() => handleModify(site)} className="text-[#003366]">
+
+                {/* Section des icônes de la carte et des actions */}
+                <div className="flex items-center gap-4">
+                  <button
+  onClick={() => handleGoToMap(site)} // Passe l'objet site ici
+  className="text-[#003366] p-2 rounded-full hover:bg-[#003366] hover:text-white transition-all"
+>
+  <PiMapPinArea className="text-2xl" />
+</button>
+
+
+                  <button
+                    onClick={() => handleModify(site)}
+                    className="text-[#003366] p-2 rounded-full hover:bg-[#003366] hover:text-white transition-all"
+                  >
                     <AiOutlineEdit className="text-xl" />
                   </button>
-                  <button onClick={() => handleDelete(site.idSite)} className="text-red-600">
+
+                  <button
+                    onClick={() => handleDelete(site.idSite)}
+                    className="text-red-600 p-2 rounded-full hover:bg-red-600 hover:text-white transition-all"
+                  >
                     <AiOutlineDelete className="text-xl" />
                   </button>
                 </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Pop-up d'ajout/modification */}
+          {showForm && (
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                <h3 className="text-2xl font-semibold text-[#003366] mb-4">
+                  {editingResidence ? 'Modifier la résidence' : 'Ajouter une résidence'}
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Nom de la résidence"
+                  value={newResidence.nom}
+                  onChange={(e) => setNewResidence({ ...newResidence, nom: e.target.value })}
+                  className="mb-4 p-2 w-full border border-gray-300 rounded-md"
+                />
+                <input
+                  type="text"
+                  placeholder="Adresse de la résidence"
+                  value={newResidence.adresse}
+                  onChange={(e) => setNewResidence({ ...newResidence, adresse: e.target.value })}
+                  className="mb-4 p-2 w-full border border-gray-300 rounded-md"
+                />
+                
+                {/* Case pour préciser la résidence sur la carte */}
+                <div className="flex justify-between items-center">
+                  <label className="text-sm">Préciser la résidence sur la carte</label>
+                  <button
+                    onClick={handleGoToMap}
+                    className="bg-[#003366] text-white py-2 px-4 rounded-md"
+                  >
+                    Aller à la carte
+                  </button>
+                </div>
+
+                <div className="flex gap-4 mt-4">
+                  <button onClick={handleAddOrUpdateResidence} className="bg-[#003366] text-white py-2 px-4 rounded-md">
+                    {editingResidence ? 'Modifier' : 'Ajouter'}
+                  </button>
+                  <button onClick={() => setShowForm(false)} className="bg-gray-500 text-white py-2 px-4 rounded-md">
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Pop-up d'ajout/modification */}
-      {showForm && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-2xl font-semibold text-[#003366] mb-4">
-              {editingResidence ? 'Modifier la résidence' : 'Ajouter une résidence'}
-            </h3>
-            <input
-              type="text"
-              placeholder="Nom de la résidence"
-              value={newResidence.nom}
-              onChange={(e) => setNewResidence({ ...newResidence, nom: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
-            />
-            <input
-              type="text"
-              placeholder="Adresse de la résidence"
-              value={newResidence.adresse}
-              onChange={(e) => setNewResidence({ ...newResidence, adresse: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
-            />
-            <div className="flex gap-4">
-              <button onClick={handleAddOrUpdateResidence} className="bg-[#003366] text-white py-2 px-4 rounded-md">
-                {editingResidence ? 'Modifier' : 'Ajouter'}
-              </button>
-              <button onClick={() => setShowForm(false)} className="bg-gray-500 text-white py-2 px-4 rounded-md">
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 };
