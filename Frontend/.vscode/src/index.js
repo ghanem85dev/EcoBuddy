@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom/client'; // Utilisez react-dom/client pour React
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './commun/context/AuthContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext'; // Import du ThemeProvider
+import { ThemeProvider } from './commun/context/ThemeContext'; // Import du ThemeProvider
 import { FiMenu, FiAlertTriangle } from "react-icons/fi";
 import { TbHomeBolt, TbDeviceAnalytics } from "react-icons/tb";
 import { IoBarChartSharp, IoTimerSharp, IoNotifications, IoGameControllerOutline, IoSettings } from "react-icons/io5";
