@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom"; // Import de la navigation
 import Navbar from "../components/NavBar";
-import Blob from "../assets/blob.svg";
-import HeroPng from "../assets/hero.png";
+import Blob from "../../assets/blob.svg";
+import HeroPng from "../../assets/hero.png";
 import { motion } from "framer-motion";
 
 // Fonction d'animation FadeUp

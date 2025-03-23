@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 
 const QuestionList = () => {
   const [questions, setQuestions] = useState([]);
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [message, setMessage] = useState("");
   const [role, setRole] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Extraire le rôle depuis l'URL
     const pathParts = window.location.pathname.split("/");
     const detectedRole = pathParts[pathParts.length - 1];
     setRole(detectedRole);
@@ -25,32 +26,54 @@ const QuestionList = () => {
 
         const data = await response.json();
         setQuestions(data);
+        setFilteredQuestions(data);
       } catch (error) {
         setMessage("Problème de connexion au serveur.");
-        setQuestions([]); // Réinitialisation en cas d'erreur
+        setQuestions([]);
+        setFilteredQuestions([]);
       }
     };
 
     fetchQuestions();
   }, []);
 
+  // Filtrage des questions en fonction de la recherche
+  useEffect(() => {
+    setFilteredQuestions(
+      questions.filter((q) =>
+        q.question.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [searchQuery, questions]);
+
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Liste des Questions pour {role}</h2>
-      {message && <p className="text-red-500">{message}</p>}
-      <ul className="mt-4">
-        {questions.length > 0 ? (
-          questions.map((q, index) => (
+    <div className="max-w-2xl mx-auto bg-[#0e457f] p-6 rounded-lg shadow-lg text-white mt-10">
+      <h2 className="text-2xl font-bold mb-4 text-center">Questions pour {role}</h2>
+      
+      {/* Barre de recherche */}
+      <input
+        type="text"
+        placeholder="Rechercher une question..."
+        className="w-full p-3 mb-4 rounded-lg border-2 border-gray-300 text-black focus:border-blue-500 focus:outline-none"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+
+      {message && <p className="text-red-300 text-center">{message}</p>}
+
+      <ul className="mt-4 space-y-3">
+        {filteredQuestions.length > 0 ? (
+          filteredQuestions.map((q, index) => (
             <li 
               key={index} 
-              className="p-2 border-b cursor-pointer text-blue-500 hover:underline"
-              onClick={() => navigate(`/reponse/${q.id}`)} // Redirection vers la page réponse
+              className="p-3 bg-white text-[#0e457f] rounded-lg cursor-pointer shadow-md hover:bg-blue-100 transition"
+              onClick={() => navigate(`/reponse/${q.id}`)}
             >
               {q.question}
             </li>
           ))
         ) : (
-          <p className="text-gray-500">Aucune question trouvée pour ce rôle.</p>
+          <p className="text-gray-200 text-center">Aucune question trouvée.</p>
         )}
       </ul>
     </div>

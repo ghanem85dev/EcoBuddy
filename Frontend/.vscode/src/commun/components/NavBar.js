@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import logoEnergy from "../assets/logoEnergy.png";
+import logoEnergy from "../../assets/logoEnergy.png";
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(null);
