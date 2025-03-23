@@ -5,17 +5,16 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import RealTimeConsumption from "../components/RealTimeConsumption";
+import RealTimeConsumption from "../commun/components/RealTimeConsumption";
 import DevicesDetected from "../components/DevicesDetected";
-import Gamification from "../components/Gamification";
-import ConsumptionComparison from "../components/ConsumptionComparison";
+import Gamification from "../commun/components/Gamification";
+import ConsumptionComparison from "../commun/components/ConsumptionComparison";
 import { MdDashboard } from "react-icons/md";
 import { FaTimes, FaEye, FaUserPlus } from "react-icons/fa";
-import Residence from "../components/Residence";
-import ConsumptionComparisonByCategory from "../components/ConsumptionComparisonByCategory";
+import Residence from "../particulier/components/Residence";
+import ConsumptionComparisonByCategory from "../commun/components/ConsumptionComparisonByCategory";
 import AverageConsumptionPerDevice from "../components/AverageConsumptionPerDevice";
-import ComparisonRange from "../components/ComparisonRange";
-import { AuthContext } from "../context/AuthContext";
+import ComparisonRange from "../commun/components/ComparisonRange";
 import { useParams } from 'react-router-dom';
 
 const SortableItem = ({ chart, toggleChartVisibility }) => {

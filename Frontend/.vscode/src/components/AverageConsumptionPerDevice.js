@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useTheme } from "../context/ThemeContext"; // Importer le hook pour obtenir le thème
+import { useTheme } from "../commun/context/ThemeContext"; // Importer le hook pour obtenir le thème
 
 const AverageConsumptionPerDevice = ({ userId }) => {
   const [averageConsumption, setAverageConsumption] = useState([]);

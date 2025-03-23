@@ -1,7 +1,7 @@
 import React from "react";
 import { GrUserExpert } from "react-icons/gr";
 import { FaBookReader } from "react-icons/fa";
-import { FadeUp } from "../components/Hero";
+import { FadeUp } from "../commun/components/Hero";
 import { motion } from "framer-motion";
 import BannerPng from "../assets/banner.png";
 import { BiMessageRoundedCheck } from "react-icons/bi";
