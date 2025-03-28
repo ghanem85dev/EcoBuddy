@@ -8,18 +8,26 @@ const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null);
   const [idUser, setIdUser] = useState(null);
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
-      const decoded = jwtDecode(token);
-      setUser(decoded.sub);
-      setRole(decoded.role);
-      setIdUser(decoded.id);
+      try {
+        console.log('Token trouvé dans localStorage:', token); // Log pour vérifier le token
+        const decoded = jwtDecode(token);
+        console.log('Token décodé:', decoded); // Log pour vérifier le contenu du token
+        setUser(decoded.user);
+        setRole(decoded.role);
+        setIdUser(decoded.id)
+      } catch (error) {
+        console.error('Erreur lors du décodage du token :', error);
+      }
+    } else {
+      console.log('Aucun token trouvé dans localStorage'); // Log si le token est manquant
     }
   }, []);
-
   const login = (token) => {
     localStorage.setItem("token", token);
     const decoded = jwtDecode(token);
+    console.log(decoded.role)
     setUser(decoded.sub);
     setRole(decoded.role);
     setIdUser(decoded.id)

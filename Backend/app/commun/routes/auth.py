@@ -96,7 +96,7 @@ class UserCreate(BaseModel):
 @router.post("/auth/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user.email).first()
-    if user.role not in ["professionnel", "particulier"]:
+    if user.role not in ["entreprise", "particulier","collectivite"]:
         raise HTTPException(status_code=400, detail="Invalid role")
     if existing_user:
         raise HTTPException(status_code=400, detail="Utilisateur déjà existant")

@@ -1,20 +1,19 @@
 /* Sidebar.css */
 .sidebar {
-    width: 500px; /* w-16 = 4rem = 64px */
-    color: #ffffff; /* text-white */
-    height: 100vh;
-    position: relative;
-    /* background-color: red; */
-    display: flex;
-    align-items: start;
-    transition: 0.2s;
-  }
-  .collapsed-sidebar {
-    width: 0;
-  }
-  .hidden {
-    display: none !important;
-  }
+  width: 500px; /* w-16 = 4rem = 64px */
+  color: #ffffff; /* text-white */
+  height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: start;
+  transition: 0.2s;
+}
+.collapsed-sidebar {
+  width: 0;
+}
+.hidden {
+  display: none !important;
+}
   
   .toggle-btn {
     background: none;
@@ -157,7 +156,7 @@
     padding: 0;
     margin: 0;
     border-radius: 50px;
-    background-color: #5a75d7;
+    background-color: #5a75d7; /* default color, will be overridden by inline style */
     font-size: 10px;
     height: 95%;
     position: fixed;
@@ -166,7 +165,7 @@
     width: 60px;
     display: flex;
     flex-direction: column;
-  }
+}
   .sidebar-nav-icons .collapsed-sidebar-icons {
   display: flex;
   flex-direction: column;
@@ -175,15 +174,13 @@
   .sidebar-nav-icons .sidebar-title {
     list-style: none;
     margin: 0;
-    /* border-bottom-right-radius: 50px;
-    border-top-right-radius: 50px; */
     border-radius: 40px;
-    background-color: #3e53a0;
+    background-color: #3e53a0; /* default color, will be overridden by inline style */
     font-size: 10px;
     width: 400px;
     padding-top: 42%;
     height: 98%;
-  }
+}
   .sidebar-nav-icons button {
     display: flex;
     align-items: center;
@@ -337,18 +334,49 @@
     font-size: 12px;
     font-weight: 600;
   }
-  @media (max-width: 767px) {
-    .sidebar,
-    .sidebar-nav-icons .sidebar-icons,
-    .sidebar-header {
-      background-color: #5a75d7;
+  /* Pour le rôle admin */
+.sidebar.admin-role .sidebar-icons,
+.sidebar.admin-role .sidebar-title {
+  background-color: #5784BA !important; /* Couleur unifiée pour admin */
+}
+
+.sidebar.admin-role .sidebar-title {
+  background-color: #4a76b8 !important; /* Légère variation pour la partie labels */
+}
+
+/* Pour le rôle entreprise (existant) */
+.sidebar.entreprise-role .sidebar-icons,
+.sidebar.entreprise-role .sidebar-title {
+  background-color: #0078B8 !important;
+}
+
+.sidebar.entreprise-role .sidebar-title {
+  background-color: #0069A1 !important;
+}
+ /* Dans le fichier Sidebar.css, modifiez la partie responsive */
+@media (max-width: 767px) {
+  .sidebar,
+  .sidebar-nav-icons .sidebar-icons,
+  .sidebar-header {
+      background-color: #5a75d7; /* default color for mobile */
       border-radius: 0px;
-      /* border-bottom-right-radius: 46px; */
-    }
-    .sidebar-nav-icons .sidebar-icons {
-      height: 80%;
-    }
-    .sidebar-header {
-      margin: 20px auto;
-    }
   }
+  /* Override for entreprise role on mobile */
+  .sidebar.entreprise-role,
+  .sidebar-nav-icons.entreprise-role .sidebar-icons,
+  .sidebar-header.entreprise-role {
+      background-color: #0078B8;
+  }
+  /* Ajout pour le rôle admin */
+  .sidebar.admin-role,
+  .sidebar-nav-icons.admin-role .sidebar-icons,
+  .sidebar-header.admin-role {
+      background-color: #5784BA;
+  }
+  .sidebar-nav-icons .sidebar-icons {
+      height: 80%;
+  }
+  .sidebar-header {
+      margin: 20px auto;
+  }
+}

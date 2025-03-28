@@ -82,7 +82,7 @@ def get_Comparison_category(user_id: int, start_date: date, end_date: date, db: 
     
     # Récupérer les consommations par catégorie d'appareil
     consommations_par_categorie = []
-    for site in user.sites:
+    for site in user.owned_sites:
         for appareil in site.appareils:
             # Assurez-vous que 'appareil.categorie' est bien défini comme une relation
             categorie = appareil.categorie  # Si un appareil a une seule catégorie
@@ -131,6 +131,8 @@ def split_period(start_date, end_date):
     delta = (end_date - start_date).days
     if delta > 365:  # Plus d'un an
         return "yearly"
+    elif delta > 90:  # Plus d'un trimestre
+        return "quarterly"
     elif delta > 30:  # Plus d'un mois
         return "monthly"
     elif delta > 7:  # Plus d'une semaine
@@ -163,44 +165,45 @@ def get_comparison_range(
     if not appareil:
         raise HTTPException(status_code=404, detail="Appareil not found")
 
-    # Diviser la période en sous-périodes en fonction de la durée
+    # Déterminer le type de période
     period_type = split_period(start_date, end_date)
     print("Period Type:", period_type)
     
-    # Aggregate the consumption data for each period
+    # Initialisation des données de consommation
     consumption_data = defaultdict(lambda: {'consumption': 0})
 
     for consommation in appareil.consommations:
         print("Consommation Date:", consommation.jour, "Quantité:", consommation.quantite)
 
     if period_type == "yearly":
-        # Aggregate consumption by year
         for consommation in appareil.consommations:
             if start_date.year <= consommation.jour.year <= end_date.year:
                 consumption_data[consommation.jour.year]['consumption'] += consommation.quantite
+    elif period_type == "quarterly":
+        for consommation in appareil.consommations:
+            if start_date <= consommation.jour <= end_date:
+                quarter = (consommation.jour.month - 1) // 3 + 1
+                quarter_label = f"T{quarter} {consommation.jour.year}"  # Format: "T1 YYYY"
+                consumption_data[quarter_label]['consumption'] += consommation.quantite
     elif period_type == "monthly":
-        # Aggregate consumption by month
         for consommation in appareil.consommations:
             if start_date <= consommation.jour <= end_date:
                 month_label = f"{consommation.jour.month}/{consommation.jour.year}"
                 consumption_data[month_label]['consumption'] += consommation.quantite
     elif period_type == "weekly":
-        # Aggregate consumption by week
         for consommation in appareil.consommations:
             if start_date <= consommation.jour <= end_date:
                 week_number = consommation.jour.isocalendar()[1]
                 year = consommation.jour.isocalendar()[0]
-                week_label = f"Semaine {week_number}, {year}"  # Format: "Semaine X, YYYY"
+                week_label = f"Semaine {week_number}, {year}"
                 print(f"Processing week: {week_label}, Quantity: {consommation.quantite}")
                 if week_label not in consumption_data:
                     consumption_data[week_label] = {'consumption': 0}
                 consumption_data[week_label]['consumption'] += consommation.quantite
-
     else:  # daily
-        # Aggregate consumption by day
         for consommation in appareil.consommations:
             if start_date <= consommation.jour <= end_date:
-                day_label = consommation.jour.strftime("%Y-%m-%d")  # Format: "YYYY-MM-DD"
+                day_label = consommation.jour.strftime("%Y-%m-%d")
                 print("Day Label:", day_label)
                 consumption_data[day_label]['consumption'] += consommation.quantite
 
@@ -240,12 +243,13 @@ def get_average_consumption_per_device(user_id: int, site_id: int, db: Session =
 
     return average_consumption_per_device
 
-@router.get("/Consommation/categorie/{site_id}")
-def get_Consommation_categorie(site_id: int, start_date: date, end_date: date, db: Session = Depends(get_db)):
+@router.get("/Consommation/categorie/{site_id}/{user_id}")
+def get_Consommation_categorie(site_id: int, user_id: int,start_date: date, end_date: date, db: Session = Depends(get_db)):
     site = db.query(Site).filter(Site.idSite == site_id).first()
     if site_id == 0:
         consommations_par_categorie = {}
-        appareils = db.query(Appareil).all()
+        appareils = db.query(Appareil).join(Site, Site.idSite == Appareil.idSite).join(User, User.id==Site.idUser).filter(User.id == user_id).all()
+        
         for appareil in appareils:
             categorie = appareil.categorie
             if categorie:
@@ -265,12 +269,6 @@ def get_Consommation_categorie(site_id: int, start_date: date, end_date: date, d
     if not site:
         raise HTTPException(status_code=404, detail="Site not found")
     
-        
-
-    
-        
-    
-    # Your logic to fetch consumption data by category
     consommations_par_categorie = []
     for appareil in site.appareils:
         categorie = appareil.categorie
@@ -288,6 +286,450 @@ def get_Consommation_categorie(site_id: int, start_date: date, end_date: date, d
     return consommations_par_categorie
 
 
+
+@router.get("/consommation/categorie-responsable/{site_id}/{user_id}")
+def get_Consommation_categorie(site_id: int, user_id: int,start_date: date, end_date: date, db: Session = Depends(get_db)):
+    
+    if site_id == 0:
+        consommations_par_categorie = {}
+        appareils = db.query(Appareil).join(Site, Site.idSite == Appareil.idSite).filter(Site.idResponsable == user_id).all()
+        for appareil in appareils:
+            categorie = appareil.categorie
+            if categorie:
+                consommation_totale = sum(
+                    consommation.quantite
+                    for consommation in appareil.consommations
+                    if start_date <= consommation.jour <= end_date
+                    )
+                if categorie.nom in consommations_par_categorie:
+                    consommations_par_categorie[categorie.nom] += consommation_totale
+                else:
+                    consommations_par_categorie[categorie.nom] = consommation_totale
+        response = [{"categorie": cat, "consommation": conso} for cat, conso in consommations_par_categorie.items()]
+        return response        
+            
+        
+    
+    site = db.query(Site).filter(Site.idSite == site_id).first()
+    if not site:
+        raise HTTPException(status_code=404, detail="Site not found")
+    
+    consommations_par_categorie = []
+    for appareil in site.appareils:
+        categorie = appareil.categorie
+        if categorie:
+            consommation_totale = sum(
+                consommation.quantite
+                for consommation in appareil.consommations
+                if start_date <= consommation.jour <= end_date
+            )
+            consommations_par_categorie.append({
+                "categorie": categorie.nom,
+                "consommation": consommation_totale
+            })
+    
+    return consommations_par_categorie
+
+@router.get("/Consommation/categorie-entreprise/{site_id}/{entreprise_id}/{user_id}")
+def get_Consommation_categorie(site_id: int,entreprise_id: int, user_id: int,start_date: date, end_date: date, db: Session = Depends(get_db)):
+    
+    if site_id == 0:
+        if entreprise_id == 0 :
+            consommations_par_categorie = {}
+            appareils = db.query(Appareil).join(Site, Site.idSite == Appareil.idSite).filter(Site.idUser == user_id).all()
+            for appareil in appareils:
+                categorie = appareil.categorie
+                if categorie:
+                    consommation_totale = sum(
+                        consommation.quantite
+                        for consommation in appareil.consommations
+                        if start_date <= consommation.jour <= end_date
+                        )
+                    if categorie.nom in consommations_par_categorie:
+                        consommations_par_categorie[categorie.nom] += consommation_totale
+                    else:
+                        consommations_par_categorie[categorie.nom] = consommation_totale
+            response = [{"categorie": cat, "consommation": conso} for cat, conso in consommations_par_categorie.items()]
+            return response
+        else :
+            consommations_par_categorie = {}
+            appareils = db.query(Appareil).join(Site, Site.idSite == Appareil.idSite).filter(Site.idEntreprise == entreprise_id).all()
+            for appareil in appareils:
+                categorie = appareil.categorie
+                if categorie:
+                    consommation_totale = sum(
+                        consommation.quantite
+                        for consommation in appareil.consommations
+                        if start_date <= consommation.jour <= end_date
+                        )
+                    if categorie.nom in consommations_par_categorie:
+                        consommations_par_categorie[categorie.nom] += consommation_totale
+                    else:
+                        consommations_par_categorie[categorie.nom] = consommation_totale
+            response = [{"categorie": cat, "consommation": conso} for cat, conso in consommations_par_categorie.items()]
+            return response        
+        
+    
+    site = db.query(Site).filter(Site.idSite == site_id).first()
+    if not site:
+        raise HTTPException(status_code=404, detail="Site not found")
+    
+    consommations_par_categorie = []
+    for appareil in site.appareils:
+        categorie = appareil.categorie
+        if categorie:
+            consommation_totale = sum(
+                consommation.quantite
+                for consommation in appareil.consommations
+                if start_date <= consommation.jour <= end_date
+            )
+            consommations_par_categorie.append({
+                "categorie": categorie.nom,
+                "consommation": consommation_totale
+            })
+    
+    return consommations_par_categorie
+
+
+from sqlalchemy import func
+from typing import List, Dict, Optional, Union
+
+class ConsommationResponse(BaseModel):
+    categorie: str
+    consommation: float
+
+class HistoricalDataResponse(BaseModel):
+    date: str
+    consumption: float
+
+# Endpoints principaux
+@router.get("/consommation/historique-managed-site/{site_id}/{user_id}", response_model=List[HistoricalDataResponse])
+def get_site_historical_consumption(
+    site_id: int,
+    user_id: int,
+    start_date: date = Query(..., description="Date de début (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="Date de fin (YYYY-MM-DD)"),
+    period_type: str = Query("day", description="Type de période (day, week, month, quarter, year)"),
+    aggregate: bool = Query(False, description="Agréger les données de tous les sites"),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Construire la requête de base
+        query = db.query(
+            func.date_trunc(period_type, Consommation.jour).label("period"),
+            func.sum(Consommation.quantite).label("consumption")
+        ).join(Appareil, Appareil.idAppareil == Consommation.idAppareil) \
+         .join(Site, Site.idSite == Appareil.idSite) \
+         .filter(
+            Consommation.jour.between(start_date, end_date),
+            Site.idResponsable == user_id
+         )
+
+        if site_id != 0:
+            query = query.filter(Site.idSite == site_id)
+
+        results = query.group_by("period").order_by("period").all()
+
+        # Ajout de logs pour le débogage
+        logging.info(f"Nombre de résultats trouvés: {len(results)}")
+        logging.info(f"Période demandée: {start_date} à {end_date}")
+        logging.info(f"Type de période: {period_type}")
+
+        formatted_results = []
+        for period, consumption in results:
+            if not period:  # Vérifier que la période n'est pas None
+                continue
+                
+            if period_type == "day":
+                date_key = period.strftime("%Y-%m-%d")
+            elif period_type == "week":
+                date_key = f"Semaine {period.isocalendar()[1]}, {period.year}"
+            elif period_type == "month":
+                date_key = period.strftime("%Y-%m")
+            elif period_type == "quarter":
+                date_key = f"T{(period.month-1)//3 + 1} {period.year}"
+            else:
+                date_key = str(period.year)
+            
+            formatted_results.append({
+                "date": date_key,
+                "consumption": float(consumption) if consumption is not None else 0.0
+            })
+
+        # Ajouter un log si aucune donnée n'est trouvée
+        if not formatted_results:
+            logging.warning(f"Aucune donnée trouvée pour user_id={user_id}, site_id={site_id}")
+
+        return formatted_results
+
+    except Exception as e:
+        logging.error(f"Erreur: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur serveur: {str(e)}"
+        )
+@router.get("/consommation/historique-managed-site/{site_id}/{user_id}", response_model=List[HistoricalDataResponse])
+def get_site_historical_consumption(
+    site_id: int,
+    user_id: int,
+    start_date: date = Query(..., description="Date de début (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="Date de fin (YYYY-MM-DD)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Récupère les données historiques de consommation:
+    - Pour un site spécifique si site_id > 0
+    - Pour tous les sites gérés par l'utilisateur si site_id = 0
+    """
+    try:
+        # Déterminer la granularité en fonction de la période
+        period_type = get_period_type(start_date, end_date)
+        
+        # Construire la requête de base
+        query = db.query(
+            func.date_trunc(period_type, Consommation.jour).label("period"),
+            func.sum(Consommation.quantite).label("consumption")
+        ).join(Appareil, Appareil.idAppareil == Consommation.idAppareil)\
+         .join(Site, Site.idSite == Appareil.idSite)\
+         .filter(
+            Consommation.jour.between(start_date, end_date)
+         )
+
+        # Appliquer les filtres supplémentaires
+        if site_id == 0:
+            # Récupérer tous les sites où l'utilisateur est responsable
+            query = query.filter(Site.idResponsable == user_id)
+        else:
+            # Vérifier que l'utilisateur a accès à ce site
+            site = db.query(Site).filter(
+                Site.idSite == site_id,
+                Site.idResponsable == user_id
+            ).first()
+            
+            if not site:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Site non trouvé ou accès non autorisé"
+                )
+            
+            query = query.filter(Appareil.idSite == site_id)
+
+        # Exécuter la requête groupée
+        results = query.group_by("period").order_by("period").all()
+        
+        # Formater les résultats
+        formatted_results = []
+        for period, consumption in results:
+            if period_type == "day":
+                date_key = period.strftime("%Y-%m-%d")
+            elif period_type == "week":
+                date_key = f"Semaine {period.isocalendar()[1]}, {period.year}"
+            elif period_type == "month":
+                date_key = period.strftime("%Y-%m")
+            elif period_type == "quarter":
+                date_key = f"T{(period.month-1)//3 + 1} {period.year}"
+            else:  # year
+                date_key = str(period.year)
+            
+            formatted_results.append({
+                "date": date_key,
+                "consumption": float(consumption) if consumption else 0.0
+            })
+
+        return formatted_results
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching historical data: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de la récupération des données historiques"
+        )
+@router.get("/consommation/historique-site/{site_id}/{user_id}", response_model=List[HistoricalDataResponse])
+def get_site_historical_consumption(
+    site_id: int,
+    user_id: int,
+    start_date: date = Query(..., description="Date de début (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="Date de fin (YYYY-MM-DD)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Récupère les données historiques de consommation pour un site spécifique
+    """
+    try:
+        # Vérifier que l'utilisateur a accès à ce site
+        site = db.query(Site).filter(
+            Site.idSite == site_id,
+            Site.idUser == user_id
+        ).first()
+        
+        if not site:
+            raise HTTPException(status_code=404, detail="Site non trouvé ou accès non autorisé")
+
+        # Déterminer la granularité en fonction de la période
+        period_type = get_period_type(start_date, end_date)
+        
+        # Construire la requête en fonction de la granularité
+        query = db.query(
+            func.date_trunc(period_type, Consommation.jour).label("period"),
+            func.sum(Consommation.quantite).label("consumption")
+        ).join(Appareil, Appareil.idAppareil == Consommation.idAppareil)\
+         .filter(
+            Appareil.idSite == site_id,
+            Consommation.jour.between(start_date, end_date)
+        ).group_by("period").order_by("period")
+
+        results = query.all()
+        
+        print("Résultats bruts:", results)
+        
+        # Formater les résultats
+        formatted_results = []
+        for row in results:
+            if not row.period:
+                continue
+                
+            # Gestion de la consommation
+            if hasattr(row, 'consumption'):
+                consumption_value = float(row.consumption) if row.consumption is not None else 0.0
+            else:
+                consumption_value = 0.0
+                
+            # Formatage de la date selon le type de période
+            if period_type == "day":
+                date_key = row.period.strftime("%Y-%m-%d")
+            elif period_type == "week":
+                date_key = f"Semaine {row.period.isocalendar()[1]}, {row.period.year}"
+            elif period_type == "month":
+                date_key = row.period.strftime("%Y-%m")
+            elif period_type == "quarter":
+                date_key = f"T{(row.period.month-1)//3 + 1} {row.period.year}"
+            else:  # year
+                date_key = str(row.period.year)
+            
+            formatted_results.append({
+                "date": date_key,
+                "consumption": consumption_value
+            })
+
+        return formatted_results
+        return [
+        {"date": key, "consumption": float(consumption)} 
+        for key, consumption in formatted_results.items()]
+
+    except Exception as e:
+        logging.error(f"Error fetching historical data: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la récupération des données historiques")
+
+@router.get("/consommation/historique-entreprise/{entreprise_id}/{user_id}", response_model=List[HistoricalDataResponse])
+def get_entreprise_historical_consumption(
+    entreprise_id: int,
+    user_id: int,
+    start_date: date = Query(..., description="Date de début (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="Date de fin (YYYY-MM-DD)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Récupère les données historiques de consommation
+    Retourne une liste d'objets {date: str, consumption: float}
+    """
+    try:
+        logging.info(f"Processing request for entreprise_id={entreprise_id}, user_id={user_id}")
+        
+        period_type = get_period_type(start_date, end_date)
+        logging.info(f"Period type determined: {period_type}")
+
+        query = db.query(
+            func.date_trunc(period_type, Consommation.jour).label("period"),
+            func.sum(Consommation.quantite).label("consumption")
+        ).join(Appareil, Appareil.idAppareil == Consommation.idAppareil)\
+         .join(Site, Site.idSite == Appareil.idSite)\
+         .filter(Consommation.jour.between(start_date, end_date))
+
+        if entreprise_id == 0:
+            logging.info("Filtering by user_id only")
+            query = query.filter(Site.idUser == user_id)
+        else:
+            logging.info(f"Filtering by entreprise_id={entreprise_id}")
+            query = query.filter(Site.idEntreprise == entreprise_id, Site.idUser == user_id)
+
+        results = query.group_by("period").order_by("period").all()
+        logging.info(f"Found {len(results)} results")
+
+        # Formatage des résultats en liste (pas en dictionnaire)
+        formatted_results = []
+        for period, consumption in results:
+            if period:
+                if period_type == "day":
+                    date_key = period.strftime("%Y-%m-%d")
+                elif period_type == "week":
+                    date_key = f"Semaine {period.isocalendar()[1]}, {period.year}"
+                elif period_type == "month":
+                    date_key = period.strftime("%Y-%m")
+                elif period_type == "quarter":
+                    date_key = f"T{(period.month-1)//3 + 1} {period.year}"
+                else:
+                    date_key = str(period.year)
+                
+                formatted_results.append({
+                    "date": date_key,
+                    "consumption": float(consumption) if consumption else 0.0
+                })
+
+        return formatted_results
+
+    except Exception as e:
+        logging.error(f"Error in get_entreprise_historical_consumption: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur serveur: {str(e)}"
+        )
+# Fonctions utilitaires
+def get_period_type(start_date: date, end_date: date) -> str:
+    """Détermine la granularité temporelle en fonction de la période"""
+    delta = (end_date - start_date).days
+    if delta <= 7:  # ≤ 1 semaine
+        return "day"
+    elif delta <= 30:  # ≤ 1 mois
+        return "week"
+    elif delta <= 90:  # ≤ 3 mois
+        return "month"
+    elif delta <= 365:  # ≤ 1 an
+        return "quarter"
+    else:  # > 1 an
+        return "year"
+
+# Modèle et endpoint pour l'ajout de consommation
+class ConsommationCreate(BaseModel):
+    quantite: float
+    jour: date
+    idAppareil: int
+
+@router.post("/consommation/", status_code=201)
+def create_consommation(consommation: ConsommationCreate, db: Session = Depends(get_db)):
+    """Endpoint pour enregistrer une nouvelle consommation"""
+    try:
+        # Vérifier que l'appareil existe
+        appareil = db.query(Appareil).get(consommation.idAppareil)
+        if not appareil:
+            raise HTTPException(status_code=404, detail="Appareil non trouvé")
+        
+        new_consommation = Consommation(
+            quantite=consommation.quantite,
+            jour=consommation.jour,
+            idAppareil=consommation.idAppareil
+        )
+        
+        db.add(new_consommation)
+        db.commit()
+        
+        return {"message": "Consommation enregistrée avec succès"}
+    
+    except Exception as e:
+        db.rollback()
+        logging.error(f"Error creating consommation: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erreur lors de l'enregistrement")
 
 # @router.get("/Comparison/user/{user_id}")
 # def get_Comparison_user(user_id: int, db: Session = Depends(get_db)):

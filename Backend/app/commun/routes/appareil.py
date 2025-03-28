@@ -33,7 +33,7 @@ def get_appareils_user(user_id: int, db: Session = Depends(get_db)):
     appareils = []
     
     # Iterate over the sites of the user and gather their appareils
-    for site in user.sites:
+    for site in user.owned_sites:
         appareils.extend(site.appareils)  # Assuming 'site.appareils' is the correct relation
     
     return appareils
@@ -46,7 +46,7 @@ class NewAppareil(BaseModel):
 
 
 @router.post("/appareils/{site_id}/{categorie_id}")
-def add_site(site_id: int,categorie_id: int,newAppareil: NewAppareil, db: Session = Depends(get_db)):
+def add_app(site_id: int,categorie_id: int,newAppareil: NewAppareil, db: Session = Depends(get_db)):
     db_site = db.query(Site).filter(Site.idSite == site_id).first()
     new_appareil = Appareil(
         nom=newAppareil.nom,

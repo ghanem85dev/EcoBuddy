@@ -7,7 +7,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const getFirstDayOfPreviousMonth = () => {
   const date = new Date();
-  date.setMonth(date.getMonth() - 1);
+  date.setMonth(date.getMonth() - 3);
   date.setDate(1);
   return date;
 };
@@ -16,7 +16,7 @@ const getTodayDate = () => {
   return new Date();
 };
 
-const ComparisonRange = ({ userId }) => {
+const ComparisonRange = ({ userId, }) => {
   const [startDate, setStartDate] = useState(() => getFirstDayOfPreviousMonth());
   const [endDate, setEndDate] = useState(() => getTodayDate());
   const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ const ComparisonRange = ({ userId }) => {
   const [periodData, setPeriodData] = useState([]);
 
   useEffect(() => {
-    setSelectedResidence(localStorage.getItem("selectedResidence") || "0");
+    setSelectedResidence(localStorage.getItem("selectedResidence") ||localStorage.getItem("selectedSite")|| "0");
     const checkResidenceChange = () => {
       const newResidence = localStorage.getItem("selectedResidence") || "0";
       if (newResidence !== selectedResidence) {
@@ -113,14 +113,40 @@ const ComparisonRange = ({ userId }) => {
         periods.push({ label: year, consumption });
       }
     } 
+    // Comparer par trimestre (plus de 90 jours)
+    else if (diffInDays > 90) {
+      const startQuarter = Math.floor(startDate.getMonth() / 3) + 1;
+      const endQuarter = Math.floor(endDate.getMonth() / 3) + 1;
+      const startYear = startDate.getFullYear();
+      const endYear = endDate.getFullYear();
+      
+      for (let year = startYear; year <= endYear; year++) {
+        const firstQuarter = year === startYear ? startQuarter : 1;
+        const lastQuarter = year === endYear ? endQuarter : 4;
+        
+        for (let quarter = firstQuarter; quarter <= lastQuarter; quarter++) {
+          const quarterLabel = `T${quarter} ${year}`;
+          const consumption = data[quarterLabel] ? data[quarterLabel].consumption : 0;
+          periods.push({ label: quarterLabel, consumption });
+        }
+      }
+    }
     // Comparer par mois
     else if (diffInDays > 30) {
       const startMonth = startDate.getMonth();
       const endMonth = endDate.getMonth();
-      for (let month = startMonth; month <= endMonth; month++) {
-        const monthLabel = `${month + 1}/${startDate.getFullYear()}`;
-        const consumption = data[monthLabel] ? data[monthLabel].consumption : 0;
-        periods.push({ label: monthLabel, consumption });
+      const startYear = startDate.getFullYear();
+      const endYear = endDate.getFullYear();
+      
+      for (let year = startYear; year <= endYear; year++) {
+        const firstMonth = year === startYear ? startMonth : 0;
+        const lastMonth = year === endYear ? endMonth : 11;
+        
+        for (let month = firstMonth; month <= lastMonth; month++) {
+          const monthLabel = `${month + 1}/${year}`;
+          const consumption = data[monthLabel] ? data[monthLabel].consumption : 0;
+          periods.push({ label: monthLabel, consumption });
+        }
       }
     } 
     // Comparer par semaine

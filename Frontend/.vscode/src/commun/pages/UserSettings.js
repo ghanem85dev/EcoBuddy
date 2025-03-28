@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Sidebar } from "../layouts/SideBar"; 
 import { Header } from "../layouts/header";
-import profileImg from "../../assets/profile.png";  
+import profileImg from "../../assets/profile.png"; 
+
+import { AuthContext } from "../../commun/context/AuthContext"; // Importez AuthContext
+import { useNavigate } from 'react-router-dom'; // Correct
 
 const UserSettings = () => {
-    const { idUser } = useParams();
+    const { user_id } = useParams();
     const [collapsed, setCollapsed] = useState(false);
     const [activePage, setActivePage] = useState("");
        
@@ -23,13 +26,13 @@ const UserSettings = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
-        if (!idUser) {
+        if (!user_id) {
             setError("ID utilisateur non disponible.");
             setLoading(false);
             return;
         }
 
-        axios.get(`http://localhost:8000/user/${idUser}/settings`)
+        axios.get(`http://localhost:8000/user/${user_id}/settings`)
             .then((response) => {
                 setUserSettings(response.data);
                 setLoading(false);
@@ -38,11 +41,11 @@ const UserSettings = () => {
                 setError("Erreur lors de la récupération des données utilisateur");
                 setLoading(false);
             });
-    }, [idUser]);
+    }, [user_id]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        axios.put(`http://localhost:8000/user/${idUser}/settings`, userSettings)
+        axios.put(`http://localhost:8000/user/${user_id}/settings`, userSettings)
             .then(() => {
                 alert("Paramètres mis à jour avec succès !");
             })
@@ -50,7 +53,26 @@ const UserSettings = () => {
                 alert("Erreur lors de la mise à jour des paramètres");
             });
     };
+ const { idUser } = useContext(AuthContext); // Utilisez useContext pour accéder au contexte
+  const navigate = useNavigate();
+console.log(user_id);
+console.log(idUser)
+  useEffect(() => {
+    if (idUser === null) {
+      console.log('id non encore défini, attente...');
+      return;
+    }
+    // Vérifiez si l'utilisateur a le rôle 'admin'
+    if (idUser != user_id) {
+      // Redirigez l'utilisateur vers une autre page s'il n'a pas le rôle 'admin'
+      navigate('/acceuil'); // Redirection vers la page d'accueil
+    }
+  }, [idUser, navigate]);
 
+  // Si l'utilisateur n'a pas le rôle 'admin', ne rien afficher
+  if (idUser != user_id) {
+    return null;
+  }
     const handleChange = (event) => {
         const { name, value } = event.target;
         setUserSettings((prevSettings) => ({
@@ -81,7 +103,7 @@ const UserSettings = () => {
         setActivePage={setActivePage} collapsed={collapsed} setCollapsed={setCollapsed} />
             {/* Contenu Principal */}
             <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? "md:ml-[240px]" : "md:ml-0"}`}>
-            <Header collapsed={collapsed} setCollapsed={setCollapsed} idUser={idUser} />
+            <Header collapsed={collapsed} setCollapsed={setCollapsed} user_id={user_id} />
 
                 <div className="h-[calc(100vh-60px)] overflow-y-auto p-6 flex justify-center items-center">
                     <div className="grid grid-cols-1 md:grid-cols-2 w-full max-w-5xl bg-[#1a2e45] rounded-2xl shadow-lg overflow-hidden">

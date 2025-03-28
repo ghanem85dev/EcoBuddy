@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoSun } from "react-icons/go";
-import { FaRegMoon, FaRegBell } from "react-icons/fa";
+import { FaRegMoon } from "react-icons/fa";
 import { FiChevronsLeft } from "react-icons/fi";
 import { ChevronDown } from "lucide-react";
 import PropTypes from "prop-types";
@@ -109,3 +109,4 @@ Header.propTypes = {
   setCollapsed: PropTypes.func,
   idUser: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Accepte string ou number
 };
+

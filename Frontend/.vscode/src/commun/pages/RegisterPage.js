@@ -197,7 +197,7 @@ const Register = () => {
             >
               <option value="">Choisissez un rôle</option>
               <option value="particulier">Particulier</option>
-              <option value="professionnel">Professionnel</option>
+              <option value="entreprise">Entreprise</option>
               <option value="collectivite">Collectivité</option>
             </select>
             {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
@@ -229,7 +229,7 @@ const Register = () => {
             >
               <option value="">Sélectionnez un rôle</option>
               <option value="particulier">Particulier</option>
-              <option value="professionnel">Professionnel</option>
+              <option value="entreprise">Entreprise</option>
               <option value="collectivite">Collectivité</option>
             </select>
             {role && (

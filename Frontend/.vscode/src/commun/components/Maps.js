@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -9,7 +9,7 @@ import LeafletGeocoder from './LeafletGeocoder';
 import { useNavigate, useLocation } from "react-router-dom";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.js";
-
+import { AuthContext } from "../../commun/context/AuthContext"; // Importez AuthContext
 // Configuration de l'icône par défaut pour Leaflet
 const DefaultIcon = L.icon({
   iconUrl: markerIcon,
@@ -24,7 +24,7 @@ const Maps = () => {
   const initialPosition = location.state?.coordinates || [36.8065, 10.1815];
   const [markerPosition, setMarkerPosition] = useState(initialPosition);
   const navigate = useNavigate();
-
+  const { idUser } = useContext(AuthContext);
   // Fonction pour mettre à jour la position du marqueur (uniquement en mode édition)
   const updateMarkerPosition = (event) => {
     if (location.state?.isEditing) {
@@ -42,11 +42,25 @@ const Maps = () => {
         lat: markerPosition.lat, 
         lng: markerPosition.lng 
       })); 
-      navigate('/sites-settings/1', { 
+      if(location.state?.entreprise){
+        if(location.state?.isFirst){
+        navigate('/entreprise/addEntreprise', { 
+          state: { 
+            coordinates: markerPosition, // Envoyer les nouvelles coordonnées
+          } 
+        });}else{
+          navigate(`/listSites/${location.state?.idEntreprise}`, { 
+            state: { 
+              coordinates: markerPosition, // Envoyer les nouvelles coordonnées
+            } 
+          });
+        }
+      }else{
+      navigate(`/sites-settings/${idUser}`, { 
         state: { 
           coordinates: markerPosition, // Envoyer les nouvelles coordonnées
         } 
-      });
+      });}
     }
   };
 

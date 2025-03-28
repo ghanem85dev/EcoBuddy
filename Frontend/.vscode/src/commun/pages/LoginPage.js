@@ -22,6 +22,7 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState("");
 
   const handleLogin = async (e) => {
+    localStorage.clear();
     e.preventDefault();
     try {
       const response = await axios.post("http://localhost:8000/auth/login", { email, password });
@@ -32,9 +33,12 @@ const Login = () => {
       alert("Connexion réussie !");
       console.log(response.data.role)
       if(response.data.role=="admin"){
-        navigate(`/dashboard/admin`);
-      }else{
-      navigate(`/dashboard/${response.data.id}`);}
+        navigate(`/admin/dashboard`);
+      }else if(response.data.role=="entreprise"){
+        navigate(`/dashboard/entreprise`);
+      }
+      else{
+      navigate(`/particulier/dashboard/${response.data.id}`);}
     } catch (error) {
       alert("Erreur de connexion !");
     }
@@ -70,6 +74,7 @@ const Login = () => {
   };
 
   const handleSuccess = (response) => {
+    localStorage.clear();
     const id_token = response.credential;
     fetch("http://localhost:8000/auth/google-login", {
       method: "POST",
@@ -84,7 +89,13 @@ const Login = () => {
         if (data.access_token) {
           login(data.access_token);
           alert("Connexion réussie !");
-          navigate(`/dashboard/${data.id}`);
+          if(data.role=="admin"){
+            navigate(`/admin/dashboard`);
+          }else if(data.role=="entreprise"){
+            navigate(`/dashboard/entreprise`);
+          }
+          else{
+          navigate(`/particulier/dashboard/${data.id}`);}
         } else {
           alert("Veuillez créer un compte !");
         }
@@ -95,6 +106,7 @@ const Login = () => {
   };
 
   const handleFacebookLogin = () => {
+    localStorage.clear();
     window.FB.login(
       (response) => {
         if (response.authResponse) {
@@ -110,7 +122,13 @@ const Login = () => {
               if (data.access_token) {
                 login(data.access_token);
                 alert("Connexion réussie !");
-                navigate(`/dashboard/${data.id}`);
+                if(data.role=="admin"){
+                  navigate(`/admin/dashboard`);
+                }else if(data.role=="entreprise"){
+                  navigate(`/dashboard/entreprise`);
+                }
+                else{
+                navigate(`/particulier/dashboard`);}
               } else {
                 alert("Veuillez créer un compte !");
               }

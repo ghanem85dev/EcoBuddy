@@ -1,7 +1,6 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, JSON,Float
+from sqlalchemy import Column, String, Integer, ForeignKey, Float
 from sqlalchemy.orm import relationship
-from pydantic import BaseModel
-from .models import Base
+from app.commun.models.models import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -11,8 +10,23 @@ class User(Base):
     password = Column(String, nullable=False)
     budget_max = Column(Float, nullable=True)
     role = Column(String, nullable=False)
+    
+    # Relations
     preferences = relationship("UserPreference", back_populates="user", uselist=False)
-    sites = relationship("Site", back_populates="user")
-
+    
+    # Sites où l'user est propriétaire
+    owned_sites = relationship(
+        "Site", 
+        back_populates="owner",
+        foreign_keys="[Site.idUser]"
+    )
+    
+    # Sites où l'user est responsable
+    managed_sites = relationship(
+        "Site", 
+        back_populates="responsable",
+        foreign_keys="[Site.idResponsable]"
+    )
+    
     invitations = relationship("Invitation", back_populates="owner")
     alertes = relationship("Alertes", back_populates="user")

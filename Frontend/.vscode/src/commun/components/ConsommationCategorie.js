@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useContext} from 'react';
 import axios from 'axios';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
+import { AuthContext } from "../context/AuthContext";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const getFirstDayOfPreviousMonth = () => {
   const date = new Date();
-  date.setMonth(date.getMonth() - 1);
+  date.setMonth(date.getMonth() - 3);
   date.setDate(1);
   return date;
 };
@@ -23,10 +24,11 @@ const ConsommationCategorie = () => {
   const [startDate, setStartDate] = useState(() => getFirstDayOfPreviousMonth());
   const [endDate, setEndDate] = useState(() => getTodayDate());
   const [selectedResidence, setSelectedResidence] = useState(localStorage.getItem("selectedResidence") || "0");
+  const { idUser } = useContext(AuthContext);
 
   const fetchConsumptionData = async () => {
     try {
-      const endpoint = `http://localhost:8000/Consommation/categorie/${selectedResidence}`;
+      const endpoint = `http://localhost:8000/Consommation/categorie/${selectedResidence}/${idUser}`;
   
       const params = {
         start_date: startDate.toISOString().split('T')[0],

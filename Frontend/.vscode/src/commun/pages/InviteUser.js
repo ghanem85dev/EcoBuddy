@@ -4,12 +4,11 @@ import { AuthContext } from "../context/AuthContext";
 import { motion } from "framer-motion";
 
 const InviteUser = () => {
-  const { idUser } = useContext(AuthContext);
+  const { idUser,role } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [sites, setSites] = useState([]);
   const [selectedSite, setSelectedSite] = useState("");
-  const [role, setRole] = useState(""); // State to hold the user's role
-
+  
   useEffect(() => {
     if (!idUser) {
       console.warn("idUser est null, la requête ne sera pas envoyée.");
@@ -18,7 +17,7 @@ const InviteUser = () => {
 
     const fetchSites = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/sites/${idUser}`);
+        const response = await axios.get(`http://localhost:8000/sites/approved/${idUser}`);
         setSites(response.data);
         if (response.data.length > 0) {
           setSelectedSite(response.data[0].idSite);
@@ -28,18 +27,10 @@ const InviteUser = () => {
       }
     };
 
-    const fetchUserRole = async () => {
-      try {
-        const response = await axios.get(`http://localhost:8000/user/${idUser}/role`);
-        setRole(response.data.role); // Assuming the API returns the user's role
-      } catch (error) {
-        console.error("Erreur lors de la récupération du rôle de l'utilisateur", error);
-      }
-    };
+   
 
     fetchSites();
-    fetchUserRole(); // Fetch the user's role on component mount
-  }, [idUser]);
+     }, [idUser]);
 
   const handleInvite = async () => {
     if (!email || !selectedSite) {
@@ -76,7 +67,7 @@ const InviteUser = () => {
         className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md border border-gray-200"
       >
         <h3 className="text-2xl font-semibold text-[#003366] mb-6 text-center">
-          Inviter un {role === "particular" ? "membre" : "responsable"}
+          Inviter un {role === "particulier" ? "membre" : "responsable"}
         </h3>
 
         {/* Champ Email */}

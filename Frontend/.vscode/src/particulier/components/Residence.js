@@ -17,10 +17,11 @@ const Residence = ({ idUser }) => {
       setError(null);
 
       try {
-        const response = await fetch(`http://localhost:8000/sites/${idUser}`);
+        const response = await fetch(`http://localhost:8000/user-sites/${idUser}`);
         if (!response.ok) throw new Error('Erreur lors de la récupération des données');
         const data = await response.json();
-        setResidences(data);
+        const approvedResidences = data.filter((site) => site.statut_approbation === "approve");
+        setResidences(approvedResidences);
 
         // Récupération de la résidence sauvegardée ou "0" par défaut
         const savedResidence = localStorage.getItem('selectedResidence') || "0";

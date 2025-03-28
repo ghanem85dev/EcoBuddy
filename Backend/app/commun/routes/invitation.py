@@ -124,8 +124,15 @@ def accept_invite(token: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Veuillez creer compte !")
 
     # Ajouter l'utilisateur à la table UserSite avec le rôle "viewer"
-    user_site = UserSite(user_id=user.id, site_id=invite.site_id, role="viewer")
-    db.add(user_site)
-    db.commit()
+    if user.role=="particulier":
+        user_site = UserSite(user_id=user.id, site_id=invite.site_id, role="viewer")
+        db.add(user_site)
+        db.commit()
+    else :
+        db_site = db.query(Site).filter(Site.idSite == invite.site_id).first()
+        if not db_site:
+            raise HTTPException(status_code=404, detail="Site not found")
+        db_site.idResponsable = user.id
+        db.commit()
 
     return {"message": "Invitation acceptée et utilisateur ajouté au site !"}
