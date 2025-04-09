@@ -43,7 +43,7 @@ const App = () => {
         <Route path="/home/:idUser" element={<Home />} />
         <Route path="/maps" element={<Maps />} />
         <Route path="/addquestion" element={<QuestionForm />} />
-        <Route path="/question/collectivité" element={<QuestionList />} />
+        <Route path="/question/entreprise" element={<QuestionList />} />
         <Route path="/question/particulier" element={<QuestionList />} />
         <Route path="/admin/question" element={<AdminQuestions />} />
         <Route path="/modifyquestion/:id" element={<ModifyQuestion />} />

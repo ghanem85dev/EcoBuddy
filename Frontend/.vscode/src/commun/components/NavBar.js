@@ -81,7 +81,7 @@ const Navbar = () => {
                 <Link to="/blog-entreprises" className="block px-4 py-2 hover:bg-gray-200">
                   Blog Entreprises
                 </Link>
-                <Link to="/question/collectivité" className="block px-4 py-2 hover:bg-gray-200">
+                <Link to="/question/entreprise" className="block px-4 py-2 hover:bg-gray-200">
                   FAQ Entreprises
                 </Link>
               </div>

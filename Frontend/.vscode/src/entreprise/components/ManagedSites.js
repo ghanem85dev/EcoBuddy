@@ -58,7 +58,7 @@ const ManagedSites = ({ idUser ,onSiteSelect}) => {
           whileTap={{ scale: 0.95 }}
         >
           {selectedSite === "0" 
-            ? 'Toutes les sites' 
+            ? 'Tous les sites' 
             : sites.find(res => res.idSite.toString() === selectedSite)?.nom || 'Sélection...'}
         </motion.button>
 
