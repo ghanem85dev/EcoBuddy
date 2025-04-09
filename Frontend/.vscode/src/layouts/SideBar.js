@@ -1,105 +1,165 @@
-import React, { forwardRef } from "react";
-import { NavLink } from "react-router-dom";
-import PropTypes from "prop-types";
-
-import { IoBarChartSharp, IoTimerSharp, IoNotifications, IoGameControllerOutline, IoSettings } from "react-icons/io5";
+import React, { forwardRef, useState, useContext, useEffect } from "react";
+import {
+  IoBarChartSharp,
+  IoTimerSharp,
+  IoNotifications,
+  IoGameControllerOutline,
+  IoSettings,
+} from "react-icons/io5";
 import { TbDeviceAnalytics } from "react-icons/tb";
 import { MdDeviceThermostat } from "react-icons/md";
 import { LuThermometerSun } from "react-icons/lu";
-import { FaMoneyCheckAlt } from "react-icons/fa";
+import { FaMoneyCheckAlt, FaUserPlus } from "react-icons/fa";
 import { FiAlertTriangle } from "react-icons/fi";
-import { TbHomeBolt } from "react-icons/tb";
-import { FaUserPlus } from "react-icons/fa";
+import { useTheme } from "../context/ThemeContext";
+import { NavLink, useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
+import { LogOutIcon } from "lucide-react";
+import { AuthContext } from "../context/AuthContext"; // Import du contexte d'authentification
+import "../styles/Sidebar.css";
 
-import logoLight from "../assets/logoLight.svg";
-import logoDark from "../assets/logoDark.svg";
-import { cn } from "../utils/cn";
-
-// 🟢 Définition des liens du menu
+// Définition des liens du sidebar
 export const navbarLinks = [
-    {
-        title: "Accueil & Surveillance",
-        links: [
-            { label: "Tableau de bord", icon: IoBarChartSharp, path: "/dashboard" },
-            { label: "Consommation en temps réel", icon: IoTimerSharp, path: "/realtime" },
-            { label: "Appareils connectés", icon: TbDeviceAnalytics, path: "/devices" },
-        ],
-    },
-    {
-        title: "Analyse & Optimisation",
-        links: [
-            { label: "Suivi énergétique", icon: MdDeviceThermostat, path: "/energy" },
-            { label: "Simulateur solaire", icon: LuThermometerSun, path: "/solar" },
-        ],
-    },
-    {
-        title: "Gestion & Paramètres",
-        links: [
-            { label: "Notifications", icon: IoNotifications, path: "/notifications" },
-            { label: "Alertes & Historique", icon: FiAlertTriangle, path: "/alerts" },
-
-            { label: "Paiements", icon: FaMoneyCheckAlt, path: "/payments" },
-            { label: "Invitations ", icon: FaUserPlus, path: "/invite"
-                                        
-                                        },
-            { label: "Gamification", icon: IoGameControllerOutline, path: "/gamification" },
-            { label: "Paramètres généraux", icon: IoSettings, path: "/settings" },
-        ],
-    },
+  {
+    links: [
+      { label: "Tableau de bord", icon: IoBarChartSharp, path: "/dashboard" },
+      { label: "Consommation", icon: IoTimerSharp, path: "/realtime" },
+      { label: "Appareils connectés", icon: TbDeviceAnalytics, path: "/devices" },
+    ],
+  },
+  {
+    links: [
+      { label: "Suivi énergétique", icon: MdDeviceThermostat, path: "/energy" },
+      { label: "Simulateur solaire", icon: LuThermometerSun, path: "/solar" },
+    ],
+  },
+  {
+    links: [
+      { label: "Notifications", icon: IoNotifications, path: "/notifications" },
+      { label: "Alertes & Historique", icon: FiAlertTriangle, path: "/alerts" },
+      { label: "Paiements", icon: FaMoneyCheckAlt, path: "/payments" },
+      { label: "Invitations", icon: FaUserPlus, path: "/invite" },
+      { label: "Gamification", icon: IoGameControllerOutline, path: "/gamification" },
+      { label: "Paramètres généraux", icon: IoSettings, path: "/settings" },
+      { label: "Logout", icon: LogOutIcon, path: "/logout" },
+    ],
+  },
 ];
 
-// 🟢 Déclaration correcte de `Sidebar`
-const Sidebar = forwardRef(({ collapsed }, ref) => {
-    return (
-        <aside
-            ref={ref}
-            className={cn(
-                "fixed z-[100] flex h-full w-[240px] flex-col overflow-x-hidden border-r border-slate-300 bg-white transition-all dark:border-slate-700 dark:bg-slate-900",
-                collapsed ? "md:w-[70px] md:items-center" : "md:w-[240px]",
-                collapsed ? "max-md:-left-full" : "max-md:left-0"
-            )}
-        >
-            {/* Logo Section */}
-            <div className="flex gap-x-3 p-3">
-            <TbHomeBolt className="block dark:hidden" color="blue" size={32} />
+// Liens spécifiques pour les administrateurs
+export const adminLinks = [
+  {
+    links: [
+      { label: "Gestion des utilisateurs", icon: FaUserPlus, path: "/admin/users" },
+      { label: "Gestion des paiements", icon: FaMoneyCheckAlt, path: "/admin/payments" },
+    ],
+  },
+];
 
-{/* Icône en mode sombre */}
-<TbHomeBolt className="hidden dark:block" color="white" size={32} />
-                {!collapsed && <p className="text-lg font-medium text-slate-900 dark:text-slate-50">My EnergyHub</p>}
-            </div>
+const Sidebar = forwardRef(({ collapsed, activePage, setActivePage }, ref) => {
+  const { theme } = useTheme();
+  const { role } = useContext(AuthContext); // Récupération du rôle utilisateur
+  const [isCollapsed, setIsCollapsed] = useState(collapsed);
+  const navigate = useNavigate();
 
-            {/* Navigation Links */}
-            <div className="flex w-full flex-col gap-y-4 overflow-y-auto p-3 scrollbar-thin">
-                {navbarLinks.map((navbarLink) => (
-                    <nav key={navbarLink.title} className={cn("sidebar-group", collapsed && "md:items-center")}>
-                        {/* 🟢 Masquer le titre si le sidebar est fermé */}
-                        {!collapsed && (
-                            <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 px-4">
-                                {navbarLink.title}
-                            </p>
-                        )}
-                        {navbarLink.links.map((link) => (
-                            <NavLink
-                                key={link.label}
-                                to={link.path}
-                                className={cn("sidebar-item flex items-center gap-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg transition-all", collapsed && "md:w-[45px]")}
-                            >
-                                {React.createElement(link.icon, { size: 22, className: "flex-shrink-0" })}
-                                {!collapsed && <p className="whitespace-nowrap">{link.label}</p>}
-                            </NavLink>
-                        ))}
-                    </nav>
-                ))}
+  // Filtrer les liens en fonction du rôle
+  const filteredLinks = role === "admin" ? [...navbarLinks, ...adminLinks] : navbarLinks;
+  const allLinks = filteredLinks.flatMap((section) => section.links);
+
+  // Gestion de l'activation des pages
+  const handleSetActivePage = (page) => {
+    if (setActivePage) {
+      setActivePage(page);
+    }
+  };
+
+  const handleNavigation = (item) => {
+    handleSetActivePage(item.label);
+    navigate(item.path);
+  };
+
+  useEffect(() => {
+    if (!activePage) {
+      handleSetActivePage("Tableau de bord");
+    }
+  }, []);
+
+  useEffect(() => {
+    setIsCollapsed(collapsed);
+  }, [collapsed]);
+
+  return (
+    <div className={`sidebar ${!collapsed ? "collapsed-sidebar" : ""}`} ref={ref}>
+      {/* HEADER SIDEBAR */}
+      {!collapsed ? (
+        <div className="sb-logo-icon-titles">
+          <div className="sb-logo">
+            <div className="sidebar-header">
+              <div className="sidebar-logo">
+                <span>My</span>
+              </div>
+              {!collapsed && <h2 className="sidebar-title">EnergyHub</h2>}
             </div>
-        </aside>
-    );
+          </div>
+        </div>
+      ) : (
+        <div className="hidden"></div>
+      )}
+
+      {/* NAVIGATION */}
+      <nav className="sidebar-nav-icons">
+        <ul className={`sidebar-icons ${collapsed ? "collapsed-sidebar-icons" : ""}`}>
+          {allLinks.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <li key={index}>
+                <button
+                  onClick={() => handleNavigation(item)}
+                  className={`sidebar-nav-button ${activePage === item.label ? "active" : ""}`}
+                >
+                  <div className="icon-line text-white">
+                    <Icon className={`side-bar-icon ${collapsed ? "side-bar-icon-collapsed" : ""}`} />
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Titres avec labels */}
+        {!collapsed ? (
+          <ul className="sidebar-title">
+            {allLinks.map((item, index) => (
+              <li className="last-title" key={index}>
+                <button
+                  onClick={() => handleNavigation(item)}
+                  className={`sidebar-nav-button ${activePage === item.label ? "active-title" : ""}`}
+                >
+                  <span className="menu-text">{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="hidden"></ul>
+        )}
+      </nav>
+    </div>
+  );
 });
 
-// 🟢 Déplacement de l'export après la déclaration complète
 Sidebar.displayName = "Sidebar";
 
 Sidebar.propTypes = {
-    collapsed: PropTypes.bool,
+  collapsed: PropTypes.bool,
+  activePage: PropTypes.string,
+  setActivePage: PropTypes.func.isRequired,
 };
 
-export { Sidebar }; // Export correct
+Sidebar.defaultProps = {
+  collapsed: false,
+  activePage: "Tableau de bord",
+  setActivePage: () => {},
+};
+
+export { Sidebar };

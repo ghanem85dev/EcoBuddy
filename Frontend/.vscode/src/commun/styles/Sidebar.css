@@ -1,0 +1,382 @@
+/* Sidebar.css */
+.sidebar {
+  width: 500px; /* w-16 = 4rem = 64px */
+  color: #ffffff; /* text-white */
+  height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: start;
+  transition: 0.2s;
+}
+.collapsed-sidebar {
+  width: 0;
+}
+.hidden {
+  display: none !important;
+}
+  
+  .toggle-btn {
+    background: none;
+    border: solid 1px #3e53a0;
+    cursor: pointer;
+    font-size: 20px;
+    color: #3e53a0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 10px;
+  }
+  
+  /* Optionally, style the logo and text to hide when closed */
+  .sidebar.closed .sidebar-title {
+    display: none;
+  }
+  
+  .sidebar.closed .sidebar-logo span {
+    font-size: 30px; /* Adjust size when sidebar is closed */
+  }
+  .sb-logo-icon-titles {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    /* background-color: green; */
+    /* gap: 20px; */
+    height: 100%;
+    width: 100%;
+  }
+  @media (min-width: 768px) {
+    /* md: breakpoint */
+    .sidebar {
+      width: 256px; /* w-64 = 16rem = 256px */
+      /* background-color: #1d4ed8; */
+      color: #ffffff; /* text-white */
+      height: 100vh;
+      position: fixed
+      ;
+      /* background-color: red; */
+      display: flex;
+      align-items: start;
+  
+    }
+    .collapsed-sidebar {
+      width: 0;
+    }
+  }
+  
+  .sb-logo {
+      width: 100%;
+      /* background: red; */
+      /* align-items: center; */
+      /* justify-content: center; */
+      margin-left: auto;
+      position: absolute;
+      border-top-right-radius: 46px;
+      top: 41px;
+      left: 159px;
+    }
+  .sidebar-header {
+    display: flex;
+    width: 80%;
+    background: transparent;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    border-top-right-radius: 46px;
+    position: relative;
+    /* border-bottom-right-radius: 46px; */
+  }
+  .sidebar-header.closed {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 10px;
+    position: absolute;
+    z-index: 2;
+    top: -10px;
+    background-color: transparent;
+    margin-left: 10px;
+  }
+  .sidebar-logo {
+    padding: 10px;
+    height: 32px; /* h-8 */
+    width: 32px; /* w-8 */
+    background-color: #ffffff; /* bg-white */
+    border-radius: 9999px; /* rounded-full */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1d4ed8; /* text-blue-700 */
+    margin-right: 12px; /* mr-3 */
+    font-weight: 700; /* font-bold */
+  }
+  
+  .sidebar-title {
+    font-weight: 700; /* font-bold */
+    font-size: 1.25rem; /* text-xl */
+    display: none;
+    height: 100%;
+  }
+  .sidebar-title-collapsed {
+  background-color: red !important;
+  width: 0%;
+  
+  }
+  
+  @media (min-width: 768px) {
+    .sidebar-title {
+      display: block;
+    }
+  }
+  
+  .sidebar-nav-icons {
+    /* background-color: #1d4ed8; */
+    width: max-content;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    width: 250px;
+  }
+  .sidebar-nav-icons.closed {
+    background-color: #3e53a0;
+    width: max-content;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .icon-line {
+    /* background-color: red; */
+   height: 82%;
+      width: 90%
+  }
+  
+  .sidebar-nav-icons .sidebar-icons {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 50px;
+    background-color: #5a75d7; /* default color, will be overridden by inline style */
+    font-size: 10px;
+    height: 95%;
+    position: fixed;
+    padding-top: 6%;
+    margin-left: 5px;
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+}
+  .sidebar-nav-icons .collapsed-sidebar-icons {
+  display: flex;
+  flex-direction: column;
+  
+  }
+  .sidebar-nav-icons .sidebar-title {
+    list-style: none;
+    margin: 0;
+    border-radius: 40px;
+    background-color: #3e53a0; /* default color, will be overridden by inline style */
+    font-size: 10px;
+    width: 400px;
+    padding-top: 42%;
+    height: 98%;
+}
+  .sidebar-nav-icons button {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border-radius: 0;
+    width: 100%;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    text-align: left;
+    height: 40px;
+    justify-content: center;
+    font-size: 14px;
+  }
+  
+  .sidebar-nav-icons button.active {
+    /* background-color: #1E40AF;  */
+    border-left: 5px solid;
+  }
+  .sidebar-nav-icons button.active-title {
+    /* background-color: #1E40AF;  */
+    background-color: #fff;
+    color: #1d4ed8;
+    border-top-left-radius: 50px;
+    border-bottom-left-radius: 50px;
+  
+    width: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    position: relative;
+  }
+  
+  .sidebar-nav-icons button span {
+    margin-left: 16px; /* ml-4 */
+    display: none;
+  }
+  .curved-border {
+    width: 50px;
+    background-color: #fff;
+    height: 82%;
+    position: absolute;
+    right: -20px;
+    /* border-bottom-left-radius: 30px;
+      border-top-left-radius: 30px; */
+    border-radius: 30px;
+    top: 0px;
+    transform: rotate(0deg);
+  }
+  .curved-border2 {
+    width: 50px;
+    background-color: #fff;
+    height: 82%;
+    position: absolute;
+    right: -20px;
+    border-radius: 30px;
+    bottom: 0px;
+    transform: rotate(0deg);
+  }
+  
+  .sidebar-nav-icons button.active {
+    /* background-color: #1E40AF;  */
+    border-left: 5px solid;
+  }
+  
+  .sidebar-nav-icons button span {
+    margin-left: 16px; /* ml-4 */
+    display: none;
+  }
+  
+  @media (min-width: 768px) {
+    .sidebar-nav-icons button span {
+      display: block;
+    }
+  }
+  
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px; /* p-4 */
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+  }
+  .sidebar-footer.closed {
+    margin-top: auto;
+    position: absolute;
+    bottom: 0;
+    width: auto !important;
+    left: 10%;
+    bottom: 5%;
+  }
+  
+  .logout-button {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  
+  .logout-button span {
+    margin-left: 16px; /* ml-4 */
+    display: none;
+  }
+  .sidebar-icon-title {
+    /* margin-top: 32px; */
+    height: 82%;
+    /* background-color: red; */
+    width: 100%;
+    display: flex;
+    /* align-items: center; */
+    justify-content: center;
+  }
+  
+  .sidebar-titles {
+    width: 100%;
+    /* background-color: green; */
+  }
+  .sidebar-title .last-title {
+    /* color: red; */
+    width: 260px;
+  }
+  @media (min-width: 768px) {
+    .logout-button span {
+      display: block;
+    }
+  }
+  
+  /* Lucide icons default size */
+  .side-bar-icon {
+    height: 80%; /* h-5 */
+    width: 80%; /* w-5 */
+    /* background-color: red; */
+  }
+  .side-bar-icon-collapsed {
+    height: 60%; /* h-5 */
+    width: 60%; /* w-5 */
+    /* background-color: red; */
+  }
+  .icon-line {
+    /* background-color: red; */
+   height: 82%;
+      width: 90%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+  .menu-text{
+    font-size: 12px;
+    font-weight: 600;
+  }
+  /* Pour le rôle admin */
+.sidebar.admin-role .sidebar-icons,
+.sidebar.admin-role .sidebar-title {
+  background-color: #5784BA !important; /* Couleur unifiée pour admin */
+}
+
+.sidebar.admin-role .sidebar-title {
+  background-color: #4a76b8 !important; /* Légère variation pour la partie labels */
+}
+
+/* Pour le rôle entreprise (existant) */
+.sidebar.entreprise-role .sidebar-icons,
+.sidebar.entreprise-role .sidebar-title {
+  background-color: #0078B8 !important;
+}
+
+.sidebar.entreprise-role .sidebar-title {
+  background-color: #0069A1 !important;
+}
+ /* Dans le fichier Sidebar.css, modifiez la partie responsive */
+@media (max-width: 767px) {
+  .sidebar,
+  .sidebar-nav-icons .sidebar-icons,
+  .sidebar-header {
+      background-color: #5a75d7; /* default color for mobile */
+      border-radius: 0px;
+  }
+  /* Override for entreprise role on mobile */
+  .sidebar.entreprise-role,
+  .sidebar-nav-icons.entreprise-role .sidebar-icons,
+  .sidebar-header.entreprise-role {
+      background-color: #0078B8;
+  }
+  /* Ajout pour le rôle admin */
+  .sidebar.admin-role,
+  .sidebar-nav-icons.admin-role .sidebar-icons,
+  .sidebar-header.admin-role {
+      background-color: #5784BA;
+  }
+  .sidebar-nav-icons .sidebar-icons {
+      height: 80%;
+  }
+  .sidebar-header {
+      margin: 20px auto;
+  }
+}

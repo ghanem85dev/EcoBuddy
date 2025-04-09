@@ -1,18 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom/client'; // Utilisez react-dom/client pour React 18+
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './commun/context/AuthContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from './commun/context/ThemeContext'; // Import du ThemeProvider
 import { FiMenu, FiAlertTriangle } from "react-icons/fi";
 import { TbHomeBolt, TbDeviceAnalytics } from "react-icons/tb";
 import { IoBarChartSharp, IoTimerSharp, IoNotifications, IoGameControllerOutline, IoSettings } from "react-icons/io5";
 import { MdDeviceThermostat } from "react-icons/md";
 import { LuThermometerSun } from "react-icons/lu";
 import { FaMoneyCheckAlt } from "react-icons/fa";
-// Correction des imports
 
 /* global FB */
 
@@ -38,21 +38,20 @@ if (typeof window !== "undefined") {
   }(document, 'script', 'facebook-jssdk'));
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById('root')); // Pour React 18+
 
 root.render(
-  <React.StrictMode>
-    <GoogleOAuthProvider clientId="104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com">
-      <AuthProvider>
+  <GoogleOAuthProvider clientId="104107465263-v7mlmu7q301eula8lbr8l176ngs3gslt.apps.googleusercontent.com">
+    <AuthProvider>
+      <ThemeProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>
-      </AuthProvider>
-    </GoogleOAuthProvider>
-  </React.StrictMode>
+      </ThemeProvider>
+    </AuthProvider>
+  </GoogleOAuthProvider>
 );
 
-// Définition des liens de navigation
 // Définition des liens de navigation
 export const navbarLinks = [
   {
@@ -82,7 +81,6 @@ export const navbarLinks = [
     ],
   },
 ];
-
 
 // Mesurer les performances de l'application
 reportWebVitals();
