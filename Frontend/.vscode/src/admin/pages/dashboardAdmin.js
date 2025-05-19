@@ -6,6 +6,11 @@ import { AuthContext } from "../../commun/context/AuthContext"; // Importez Auth
 import {Sidebar}  from "../../commun/layouts/SideBar";
 import {AdminNavbar} from "../components/AdminNavbar";
 import UsersByRoleChart from "../components/UsersByRole";
+import EntrepriseSectorChart from "../components/EntrepriseSectorChart"
+import EntrepriseSizeChart from "../components/EntrepriseSizeChart"
+import SitesByCategoryChart from "../components/SitesByCategoryChart"
+import StatsCard from "../../commun/components/StatsCard"
+import ApprobationStatsCard from "../components/ApprobationStatsCard"
 const WelcomeDashboard = () => {
   const { theme } = useTheme();
   const { idUser } = useParams();
@@ -36,28 +41,42 @@ console.log(role)
 
   
     return (
-      <div className="min-h-screen bg-white text-black flex transition-colors">
-        {/* Sidebar */}
-        <Sidebar 
-          activePage={activePage} 
-          setActivePage={setActivePage} 
-          collapsed={collapsed} 
-          setCollapsed={setCollapsed} 
-        />
-  
-        {/* Contenu principal */}
-        <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'ml-[50px] w-[calc(100%-50px)]' : 'ml-[250px] w-[calc(100%-250px)]'} p-4`}>
-         <AdminNavbar collapsed={collapsed} setCollapsed={setCollapsed} idUser={idUser} />  {/* Contenu de bienvenue */}
-         <div className="flex-1 p-10 overflow-auto">
-         <div className="h-full">
-         <div className="flex flex-col gap-6 w-full transition-all duration-300">
-                 <div></div>
+
+         <div className="space-y-6">
+          <div className="flex" style={{ gap: '32px' }}>
+                    <StatsCard idUser={idUser} type="demande residence" />
+                    <StatsCard idUser={idUser} type="demande entreprise" />
+                    <StatsCard idUser={idUser} type="demande local" />
+                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
             <UsersByRoleChart></UsersByRoleChart>
             </div>
+             <div className="lg:col-span-2">
+            <EntrepriseSectorChart></EntrepriseSectorChart>
             </div>
-          </div>
-        </div>
-      </div>
+             <div className="lg:col-span-2">
+            <SitesByCategoryChart></SitesByCategoryChart>
+            
+            </div>
+           
+            <div className="lg:col-span-1 relative top-[-1062px]">
+            <div className="lg:col-span-2 mb-6">
+            <EntrepriseSizeChart></EntrepriseSizeChart>
+            </div>
+             <div className="lg:col-span-2 mb-6">
+                       <ApprobationStatsCard type="residence"  />
+                       </div>
+                       <div className="lg:col-span-2 mb-6">
+                       <ApprobationStatsCard type="entreprise"  />
+                       </div>
+                       <div className="lg:col-span-2">
+                       <ApprobationStatsCard type="local"/>
+                       </div>
+            </div>
+            </div>
+             </div>
+          
     );
   };
   

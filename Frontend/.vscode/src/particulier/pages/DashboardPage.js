@@ -1,157 +1,290 @@
-import { useEffect, useState } from "react";
-import { Sidebar } from "../../commun/layouts/SideBar";
-import { Header } from "../../commun/layouts/header";
-import { useParams } from "react-router-dom";
-import { DndContext, closestCenter } from "@dnd-kit/core";
-import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import axios from "axios";
-import { FaEye, FaTimes } from "react-icons/fa";
+import { useContext, useState, useEffect, useRef } from "react";
 import RealTimeConsumption from "../../commun/components/RealTimeConsumption";
-import Gamification from "../../commun/components/Gamification";
 import ComparisonRange from "../../commun/components/ComparisonRange";
-import Residence from "../components/Residence";
 import ConsumptionComparisonByCategory from "../../commun/components/ConsumptionComparisonByCategory";
-import { FaUserPlus } from "react-icons/fa";
+import TopSitesDoughnutChart from "../../commun/components/ConsommationCategorie";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../commun/context/ThemeContext"; // Import du context pour gérer le thème
-import ConsommationCategorie from "../../commun/components/ConsommationCategorie";
+import MonthlyConsumptionIndicator from "../../commun/components/MonthlyConsumptionIndicator";
+import ExtremeConsumptionCard from "../../commun/components/ExtremeConsumptionCard";
+import StatsCard from "../../commun/components/StatsCard";
+import { FaComment,FaTimes } from "react-icons/fa";
+import { AuthContext } from "../../commun/context/AuthContext";
+import GamificationCard from "../../commun/components/GamificationCard";
+import axios from "axios";
+import { useTheme } from "../../commun/context/ThemeContext";
 
-// 📌 Définition des cartes de charts
-const SortableItem = ({ chart, toggleChartVisibility }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: chart.id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
+const ChatbotModal = ({ userId, onClose, theme }) => {
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const RASA_API_URL = 'http://localhost:8000/api/chatbot';
+  const FASTAPI_URL = 'http://localhost:8000/conversations/';
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!userId) return;
+    
+    const fetchConversationHistory = async () => {
+      try {
+        const response = await axios.get(`${FASTAPI_URL}${userId}`);
+        setMessages(response.data.map(msg => ({
+          text: msg.message,
+          sender: msg.sender_type,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString(),
+          image: msg.image || null
+        })));
+      } catch (error) {
+        console.error("Erreur historique:", error);
+      }
+    };
+
+    fetchConversationHistory();
+  }, [userId]);
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || !userId) return;
+
+    const userMessage = {
+      text: inputMessage,
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
+
+    try {
+      await axios.post(FASTAPI_URL, {
+        sender_id: String(userId),
+        message: inputMessage,
+        sender_type: 'user',
+        timestamp: new Date().toISOString(),
+      });
+
+      const rasaResponse = await axios.post(RASA_API_URL, {
+        sender: userId,
+        message: inputMessage,
+      });
+
+      if (rasaResponse.data?.length > 0) {
+        for (const resp of rasaResponse.data) {
+          const botMessage = {
+            sender_id: String(userId),
+            message: resp.text,
+            sender_type: 'bot',
+            timestamp: new Date().toISOString(),
+            image: resp.image || null
+          };
+          
+          await axios.post(FASTAPI_URL, botMessage);
+          
+          setMessages(prev => [...prev, {
+            text: resp.text,
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString(),
+            image: resp.image || null
+          }]);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setMessages(prev => [...prev, {
+        text: "Erreur de connexion au serveur",
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString()
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-[#1E293B] border border-gray-700 shadow-lg rounded-xl h-auto min-h-[300px] p-6 w-full mt-4"
-    >
-      <div className="flex justify-between items-center">
-        <p className="text-white font-semibold">{chart.name}</p>
-        <button onClick={() => toggleChartVisibility(chart)} className="text-red-500 hover:text-red-700">
-          <FaTimes />
+    <div className={`fixed bottom-24 right-8 w-[32rem] h-[36rem] flex flex-col rounded-lg shadow-xl z-50 ${
+      theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
+    }`}>
+      <div className={`flex justify-between items-center p-4 border-b ${
+        theme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-100'
+      } rounded-t-lg`}>
+        <h3 className="font-semibold text-lg">EnergyChat</h3>
+        <button 
+          onClick={onClose} 
+          className={`p-1 rounded-full ${
+            theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+          }`}
+        >
+          <FaTimes className="text-lg" />
         </button>
       </div>
-      <div className="mt-4">{chart.component}</div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.map((msg, index) => (
+          <div key={index} className={`mb-3 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
+            <div className={`inline-block px-4 py-2 rounded-lg max-w-xs lg:max-w-md ${
+              msg.sender === 'user'
+                ? theme === 'dark' ? 'bg-[#2DBDAC] text-white' : 'bg-[#2DBDAC] text-white'
+                : theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'
+            }`}>
+              {msg.text}
+              {msg.image && (
+                <img 
+                  src={msg.image} 
+                  alt="Réponse" 
+                  className="mt-2 rounded-lg max-w-full"
+                />
+              )}
+              <div className={`text-xs mt-1 ${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                {msg.timestamp}
+              </div>
+            </div>
+          </div>
+        ))}
+        {isTyping && (
+          <div className="text-left">
+            <div className={`inline-block px-4 py-2 rounded-lg ${
+              theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'
+            }`}>
+              <div className="flex space-x-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  theme === 'dark' ? 'bg-gray-400' : 'bg-gray-500'
+                } animate-bounce`}></div>
+                <div className={`w-2 h-2 rounded-full ${
+                  theme === 'dark' ? 'bg-gray-400' : 'bg-gray-500'
+                } animate-bounce`} style={{ animationDelay: '0.2s' }}></div>
+                <div className={`w-2 h-2 rounded-full ${
+                  theme === 'dark' ? 'bg-gray-400' : 'bg-gray-500'
+                } animate-bounce`} style={{ animationDelay: '0.4s' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className={`p-4 border-t ${
+        theme === 'dark' ? 'border-gray-700' : 'border-gray-300'
+      }`}>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Posez votre question..."
+            className={`flex-1 p-3 rounded-lg border ${
+              theme === 'dark' 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-800'
+            } focus:outline-none focus:ring-2 focus:ring-[#2DBDAC]`}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!inputMessage.trim()}
+            className={`p-3 rounded-lg ${
+              theme === 'dark'
+                ? 'bg-[#2DBDAC] hover:bg-[#239a8c] text-white'
+                : 'bg-[#2DBDAC] hover:bg-[#239a8c] text-white'
+            } disabled:bg-gray-400 disabled:cursor-not-allowed`}
+          >
+            Envoyer
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
 const DashboardPage = () => {
-  const { theme } = useTheme();
-  const { idUser } = useParams();
-  const [visibleCharts, setVisibleCharts] = useState([]);
-  const [hiddenCharts, setHiddenCharts] = useState([]);
-  const [collapsed, setCollapsed] = useState(false);
+  const { idUser } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  const initialCharts = [
-    { id: "realTime", name: "Consommation en Temps Réel", component: <RealTimeConsumption idUser={idUser}/> },
-    // { id: "devices", name: "Appareils Détectés", component: <DevicesDetected userId={idUser}/> },
-    { id: "gamification", name: "Gamification", component: <Gamification /> },
-    // { id: "comparison", name: "Comparaison de Consommation", component: <ConsumptionComparison idUser={idUser} /> },
-   { id: "comparisonByCategory", name: "Comparaison de Consommation selon la categorie", component: <ConsumptionComparisonByCategory idUser={idUser} /> },
-    { id: "ComparisonRange", name: "Comparaison de Consommation ", component: <ComparisonRange userId={idUser} /> },
-    { id: "ConsommationCategorie", name: "Consommation par categorie", component: <ConsommationCategorie/> },
-  ];
-
+  const [loading, setLoading] = useState(true);
+  const [showChatbot, setShowChatbot] = useState(false);
+const { theme } = useTheme();
   useEffect(() => {
-    const fetchPreferences = async () => {
-      try {
-        const response = await axios.get(`http://localhost:8000/preferences/${idUser}`);
-        const { visible = [], hidden = [] } = response.data;
-        setVisibleCharts(visible.length ? visible : initialCharts);
-        setHiddenCharts(hidden);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des préférences :", error);
-        setVisibleCharts(initialCharts);
-      }
-    };
-
-    fetchPreferences();
+    if (idUser) {
+      setLoading(false);
+    }
   }, [idUser]);
-
-  const savePreferences = async (visible, hidden) => {
-    try {
-      await axios.put(`http://localhost:8000/preferences/${idUser}`, { visible, hidden });
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des préférences :", error);
-    }
+  const toggleChatbot = () => {
+    setShowChatbot(!showChatbot);
   };
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Chargement...</div>;
+  }
 
-  const toggleChartVisibility = (chart) => {
-    if (visibleCharts.find((c) => c.id === chart.id)) {
-      const newVisible = visibleCharts.filter((c) => c.id !== chart.id);
-      const newHidden = [...hiddenCharts, chart];
-      setVisibleCharts(newVisible);
-      setHiddenCharts(newHidden);
-      savePreferences(newVisible, newHidden);
-    } else {
-      const newHidden = hiddenCharts.filter((c) => c.id !== chart.id);
-      const newVisible = [...visibleCharts, chart];
-      setVisibleCharts(newVisible);
-      setHiddenCharts(newHidden);
-      savePreferences(newVisible, newHidden);
-    }
-  };
-
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      const oldIndex = visibleCharts.findIndex((chart) => chart.id === active.id);
-      const newIndex = visibleCharts.findIndex((chart) => chart.id === over.id);
-      const newOrder = arrayMove(visibleCharts, oldIndex, newIndex);
-      setVisibleCharts(newOrder);
-      savePreferences(newOrder, hiddenCharts);
-    }
-  };
-  const [activePage, setActivePage] = useState("Tableau de bord");
-
-  return ( 
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#08112F] text-white' : 'bg-white text-black'} transition-colors flex`}>
-      <Sidebar activePage={activePage}
-        setActivePage={setActivePage} collapsed={collapsed} setCollapsed={setCollapsed} />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'ml-[50px] w-[calc(100%-50px)]' : 'ml-[250px] w-[calc(100%-250px)]'} p-4`}>
-        <Header collapsed={collapsed} setCollapsed={setCollapsed} idUser={idUser} />
-        <div className="h-[calc(100vh-60px)] overflow-y-auto p-6">
-          <h1 className="text-2xl font-bold text-white mb-6"></h1>
-          <div className="flex items-center gap-4">
-            <Residence idUser={idUser} />
-            <button onClick={() => navigate('/invite')} className="text-[#003366] text-2xl hover:text-[#0055aa]">
-              <FaUserPlus />
-            </button>
-          </div>
-          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={visibleCharts} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-6 w-full transition-all duration-300">
-                {visibleCharts.map((chart) => (
-                  <SortableItem key={chart.id} chart={chart} toggleChartVisibility={toggleChartVisibility} />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-          {hiddenCharts.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Graphiques masqués</h3>
-              <div className="flex flex-wrap gap-3">
-                {hiddenCharts.map((chart) => (
-                  <div key={chart.id} className="px-4 py-2 bg-[#003366] text-white rounded-lg shadow-lg cursor-pointer text-md"
-                    onClick={() => toggleChartVisibility(chart)}>
-                    <FaEye className="mr-2" />
-                    {chart.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+  return (
+    
+    <>
+    <div className="space-y-6">
+        <div className="flex" style={{ gap: '32px' }}>
+          <StatsCard idUser={idUser} type="site" />
+          <StatsCard idUser={idUser} type="appareil" />
+          <StatsCard idUser={idUser} type="appareil" />
         </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ConsumptionComparisonByCategory idUser={idUser} />
+          </div>
+          
+          <div className="lg:col-span-2">
+            <RealTimeConsumption idUser={idUser} /> 
+          </div>
+          
+          <div className="lg:col-span-2">
+            <ComparisonRange userId={idUser} />
+           
+          </div>
+          
+          <div className="lg:col-span-1 relative top-[-1362px]">
+            <div className="lg:col-span-2 mb-6">
+                    <GamificationCard userId={idUser} />
+                    </div>
+          <div className="lg:col-span-2 mb-6"> {/* Ajout de mb-6 pour la marge basse */}
+          <MonthlyConsumptionIndicator idUser={idUser} />
+          </div>
+          <div className="lg:col-span-2 mb-6">
+          <ExtremeConsumptionCard type="appareil" userId={idUser} />
+          </div>
+          <div className="lg:col-span-2 mb-6">
+          <ExtremeConsumptionCard type="site" userId={idUser} />
+          </div>
+          <div className="lg:col-span-2">
+          <TopSitesDoughnutChart userId={idUser} type="residence"/>
+          </div>
+          </div>
       </div>
-    </div>
+
+        <button 
+                onClick={toggleChatbot}
+                className={`fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                  theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white z-40`}
+                aria-label="Ouvrir le chatbot"
+              >
+                <FaComment className="text-xl" />
+              </button>
+              
+              {showChatbot && (
+                <ChatbotModal 
+                  userId={idUser} 
+                  onClose={() => setShowChatbot(false)} 
+                  theme={theme} 
+                />
+              )}
+      </div>
+    </>
+    
   );
 };
 

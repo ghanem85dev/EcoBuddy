@@ -1,0 +1,14 @@
+# Fichiers système
+**/.git
+**/.DS_Store
+**/Thumbs.db
+
+# Fichiers de développement
+**/node_modules
+**/npm-debug.log
+**/.env.local
+**/.env.development
+
+# Fichiers temporaires
+**/*.tmp
+**/*.log

@@ -1,263 +1,154 @@
-import React, { forwardRef, useState, useContext, useEffect, useMemo } from "react";
-import {
-  IoBarChartSharp,
-  IoTimerSharp,
-  IoNotifications,
-  IoGameControllerOutline,
-  IoSettings,
-  IoBusiness,
-  IoHelpCircleOutline
-} from "react-icons/io5";
-import { useLocation } from "react-router-dom";
-import { TbDeviceAnalytics } from "react-icons/tb";
-import { MdDeviceThermostat } from "react-icons/md";
-import { LuThermometerSun } from "react-icons/lu";
-import { FaMoneyCheckAlt, FaUserPlus } from "react-icons/fa";
-import { FiAlertTriangle } from "react-icons/fi";
-import { useTheme } from "../context/ThemeContext";
+import React from 'react';
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import PropTypes from "prop-types";
-import { LogOutIcon } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
-import "../styles/Sidebar.css";
-import { IoLocationSharp } from "react-icons/io5";
+import { AuthContext } from "../../commun/context/AuthContext";
+import {
+  FaTachometerAlt,
+  FaPlug,
+  FaComments,
+  FaBuilding,
+  FaMedal,
+  FaTools,
+  FaUser,
+  FaTrophy,
+  FaSignOutAlt,
+  FaUsers,
+  FaHome,
+  FaQuestionCircle
+} from 'react-icons/fa';
+import { FiSend } from 'react-icons/fi';
 
-export const adminLinks = [
-  {
-    links: [
-      {
-        label: "Tableau de bord",
-        icon: IoBarChartSharp,
-        path: "/admin/dashboard"
-      },
-      { 
-        label: "Entreprises", 
-        icon: IoBusiness, 
-        path: "/admin/entrepriseSettings"
-      },
-      { 
-        label: "Locaux", 
-        icon: IoLocationSharp, 
-        path: "/admin/Sites-settings"
-      },
-      { 
-        label: "FAQ", 
-        icon: IoHelpCircleOutline, 
-        path: "/admin/question"
-      },
-    ],
-  },
-];
-
-export const navbarLinks = [
-  {
-    links: [
-      {
-        label: "Tableau de bord",
-        icon: IoBarChartSharp,
-        path: (role) => role === "entreprise" ? "/dashboard/entreprise" : "/dashboard",
-      },
-      { label: "Consommation", icon: IoTimerSharp, path: "/realtime" },
-      { label: "Appareils connectés", icon: TbDeviceAnalytics, path: "/devices" },
-    ],
-  },
-  {
-    links: [
-      { label: "Suivi énergétique", icon: MdDeviceThermostat, path: "/energy" },
-      { label: "Simulateur solaire", icon: LuThermometerSun, path: "/solar" },
-    ],
-  },
-  {
-    links: [
-      { label: "Notifications", icon: IoNotifications, path: "/notifications" },
-      { label: "Alertes & Historique", icon: FiAlertTriangle, path: "/alerts" },
-      { label: "Paiements", icon: FaMoneyCheckAlt, path: "/payments" },
-      { label: "Invitations", icon: FaUserPlus, path: "/invite" },
-      { label: "Gamification", icon: IoGameControllerOutline, path: "/gamification" },
-      { label: "Paramètres généraux", icon: IoSettings, path: "/settings" },
-      { label: "Logout", icon: LogOutIcon, path: "/logout" },
-    ],
-  },
-];
-
-export const entrepriseLinks = [
-  {
-    links: [
-      { 
-        label: "Entreprises et locaux", 
-        icon: IoBusiness, 
-        path: "/listEntreprises" 
-      },
-      { 
-        label: "Sites gérés", 
-        icon: IoLocationSharp, 
-        path: "/dashboard/responsable" 
-      },
-    ],
-  },
-];
-
-const Sidebar = forwardRef(({ collapsed, activePage, setActivePage }, ref) => {
-  const { theme } = useTheme();
-  const { role, user } = useContext(AuthContext);
-  const [isCollapsed, setIsCollapsed] = useState(collapsed);
+const Sidebar = () => {
+  const { role, logout } = useContext(AuthContext); // Ajout de la fonction logout du contexte
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const getSidebarColors = () => {
-    if (!role) return { main: "#5a75d7", secondary: "#3e53a0" };
-    
+  // Couleur en fonction du rôle
+  const activeColor = '#2DBDAC' 
+
+  // Définition des menus avec leurs routes
+  const menuParticulier = [
+    { Icon: FaTachometerAlt, label: 'Tableau de bord', path: '/particulier/dashboard', active: true },
+    { Icon: FaBuilding, label: 'Sites', path: '/particulier/sites' },
+    { Icon: FaPlug, label: 'Appareils', path: '/particulier/appareils' },
+    { Icon: FaComments, label: 'EnergyChat', path: '/chatbot' },
+    { Icon: FaMedal, label: 'Gamification', path: '/particulier/gamification' },
+    { Icon: FaTrophy, label: 'Defis', path: '/particulier/defis' },
+    { Icon: FiSend, label: 'Invitations', path: '/particulier/invitation' }
+  ];
+
+  const menuEntreprise = [
+    { Icon: FaTachometerAlt, label: 'Tableau de bord', path: '/entreprise/dashboard', active: true },
+    { Icon: FaTools, label: 'Entreprises', path: '/entreprise/entreprises' },
+    { Icon: FaBuilding, label: 'Sites', path: '/entreprise/sites' },
+    { Icon: FaMedal, label: 'Gamification', path: '/entreprise/gamification' },
+    { Icon: FaTrophy, label: 'Defis', path: '/entreprise/defis' },
+    { Icon: FaComments, label: 'Support', path: '/question/entreprise' },
+  ];
+
+  const menuAdmin = [
+    { Icon: FaTachometerAlt, label: 'Tableau de bord', path: '/admin/dashboard', active: true },
+    { Icon: FaUsers, label: 'Utilisateurs', path: '/admin/utilisateurs' },
+    { Icon: FaHome, label: 'Résidences', path: '/admin/residences' },
+    { Icon: FaBuilding, label: 'Entreprises', path: '/admin/entreprises' },
+    { Icon: FaTools, label: 'Locaux des entreprises', path: '/admin/sites' },
+    { Icon: FaTrophy, label: 'Défis', path: '/admin/defis' },
+    { Icon: FaQuestionCircle, label: 'FAQ', path: '/admin/faq' },
+  ];
+
+  const getMenuItems = () => {
     switch(role) {
-      case "entreprise":
-        return { main: "#0078B8", secondary: "#0069A1" };
-      case "admin":
-        return { main: "#5784BA", secondary: "#4a76b8" };
+      case 'particulier':
+        return menuParticulier;
+      case 'entreprise':
+        return menuEntreprise;
+      case 'admin':
+        return menuAdmin;
       default:
-        return { main: "#5a75d7", secondary: "#3e53a0" };
+        return [];
     }
   };
 
-  const colors = useMemo(() => getSidebarColors(), [role]);
+  const menuItems = getMenuItems();
 
-  const getFilteredLinks = () => {
-    if (!role) return [];
-    
-    let links = [...navbarLinks];
-    
-    if (role === "admin") {
-      links = [...adminLinks];
-    } else if (role === "entreprise") {
-      const entrepriseLinksWithId = entrepriseLinks.map(section => ({
-        ...section,
-        links: section.links.map(link => ({
-          ...link,
-          path: link.path === "/listEntreprises" 
-            ? `/listEntreprises` 
-            : link.path
-        }))
-      }));
-      links = [...entrepriseLinksWithId, ...links];
-    }
-    
-    return links;
-  };
-
-  const filteredLinks = useMemo(() => getFilteredLinks(), [role]);
-  const allLinks = filteredLinks.flatMap((section) => section.links);
-
-  useEffect(() => {
-    if (!role) return;
-    
-    const currentPath = location.pathname;
-    const matchingLink = allLinks.find(link => {
-      const linkPath = typeof link.path === 'function' ? link.path(role) : link.path;
-      return currentPath === linkPath;
-    });
-    
-    if (matchingLink) {
-      setActivePage(matchingLink.label);
-    }
-  }, [location.pathname, role, allLinks, setActivePage]);
-
-  const handleSetActivePage = (page) => {
-    if (setActivePage) {
-      setActivePage(page);
-    }
-  };
-
-  const handleNavigation = (item) => {
-    handleSetActivePage(item.label);
-    const path = typeof item.path === 'function' ? item.path(role) : item.path;
+  const handleNavigation = (path) => {
     navigate(path);
   };
 
-  useEffect(() => {
-    if (!activePage && allLinks.length > 0) {
-      handleSetActivePage(allLinks[0].label);
-    }
-  }, [allLinks]);
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    logout(); // Appel de la fonction logout du contexte
+    navigate('/login'); // Redirection vers la page de login
+  };
 
-  useEffect(() => {
-    setIsCollapsed(collapsed);
-  }, [collapsed]);
-
-  if (!role) return null;
+  // Vérifie si la route est active
+  const isActive = (path) => {
+    return window.location.pathname === path;
+  };
 
   return (
-    <div className={`sidebar ${!collapsed ? "collapsed-sidebar" : ""} ${role}-role`} ref={ref}>
-      {/* HEADER SIDEBAR */}
-      {!collapsed ? (
-        <div className="sb-logo-icon-titles">
-          <div className="sb-logo">
-            <div className="sidebar-header">
-              <div className="sidebar-logo">
-                <span>My</span>
-              </div>
-              {!collapsed && <h2 className="sidebar-title">EnergyHub</h2>}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="hidden"></div>
-      )}
+    <div className="w-60 h-screen bg-white border-r px-6 py-6 flex flex-col">
+      {/* Logo */}
+      <div 
+        className="text-2xl font-bold mb-10 select-none cursor-pointer"
+        onClick={() => navigate('/')}
+      >
+        <span className="text-black">My</span>
+        <span  style={{ color: activeColor }}>EnergyHub</span>
+      </div>
 
-      {/* NAVIGATION */}
-      <nav className="sidebar-nav-icons">
-        <ul 
-          className={`sidebar-icons ${collapsed ? "collapsed-sidebar-icons" : ""}`}
-          style={{ backgroundColor: colors.main }}
-        >
-          {allLinks.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <li key={index}>
-                <button
-                  onClick={() => handleNavigation(item)}
-                  className={`sidebar-nav-button ${activePage === item.label ? "active" : ""}`}
-                >
-                  <div className="icon-line text-white">
-                    <Icon className={`side-bar-icon ${collapsed ? "side-bar-icon-collapsed" : ""}`} />
-                  </div>
-                </button>
-              </li>
-            );
-          })}
+      {/* Main Menu */}
+      <div className="flex-1">
+        <ul className="space-y-2">
+          {menuItems.map((item) => (
+            <li
+              key={item.label}
+              onClick={() => handleNavigation(item.path)}
+              className={
+                `flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition ${
+                  isActive(item.path) 
+                    ? 'text-white' 
+                    : 'text-[#3D4A5C] hover:bg-gray-100'
+                }`
+              }
+              style={isActive(item.path) ? { backgroundColor: activeColor } : {}}
+            >
+              <span className="text-lg"><item.Icon /></span>
+              <span className="text-base font-semibold">{item.label}</span>
+            </li>
+          ))}
         </ul>
 
-        {!collapsed && (
-          <ul 
-            className="sidebar-title"
-            style={{ backgroundColor: colors.secondary }}
+        {/* Divider */}
+        <div className="border-t my-6"></div>
+
+        {/* Other Menu */}
+        <ul className="space-y-2">
+          <li
+            onClick={() => handleNavigation('/profile')}
+            className={
+              `flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition ${
+                isActive('/profile') 
+                  ? 'text-white' 
+                  : 'text-[#3D4A5C] hover:bg-gray-100'
+              }`
+            }
+            style={isActive('/profile') ? { backgroundColor: activeColor } : {}}
           >
-            {allLinks.map((item, index) => (
-              <li className="last-title" key={index}>
-                <button
-                  onClick={() => handleNavigation(item)}
-                  className={`sidebar-nav-button ${activePage === item.label ? "active-title" : ""}`}
-                >
-                  <span className="menu-text">{item.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </nav>
+            <span className="text-lg"><FaUser /></span>
+            <span className="text-base font-semibold">Profile</span>
+          </li>
+          
+          <li
+            onClick={handleLogout} // Utilisation de la fonction handleLogout
+            className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition text-[#3D4A5C] hover:bg-gray-100"
+          >
+            <span className="text-lg"><FaSignOutAlt /></span>
+            <span className="text-base font-semibold">Déconnexion</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
-});
-
-Sidebar.displayName = "Sidebar";
-
-Sidebar.propTypes = {
-  collapsed: PropTypes.bool,
-  activePage: PropTypes.string,
-  setActivePage: PropTypes.func.isRequired,
-};
-
-Sidebar.defaultProps = {
-  collapsed: false,
-  activePage: "Tableau de bord",
-  setActivePage: () => {},
 };
 
 export { Sidebar };

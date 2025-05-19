@@ -1,0 +1,23 @@
+version: "3.1"
+
+responses:
+  utter_approximate_request_response:
+  - text: "Je crois comprendre que vous demandez :\n« {corrected_text} »\n\nPouvez-vous confirmer ?"
+    buttons:
+    - title: "Oui, c'est ça"
+      payload: "/affirm"
+    - title: "Non, autre chose"
+      payload: "/deny"
+
+  utter_clarify_consumption:
+  - text: "Parlez-vous de :\n1. Votre consommation globale\n2. Votre appareil le plus gourmand\n3. Des conseils pour économiser ?"
+    buttons:
+    - title: "Consommation globale"
+      payload: "/demande_consommation"
+    - title: "Appareil gourmand"
+      payload: "/ask_most_consuming_device"
+    - title: "Conseils économie"
+      payload: "/demande_conseils"
+
+  utter_confirm_understanding:
+  - text: "Si je comprends bien, vous voulez {interpretation}. C'est correct ?"

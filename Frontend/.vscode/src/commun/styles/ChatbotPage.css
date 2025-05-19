@@ -1,0 +1,44 @@
+/* Animations */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+  }
+  
+  /* Styles desktop pour le chatbot */
+  .chat-container {
+    height: 75vh; /* Hauteur relative à la vue */
+    max-height: 650px; /* Hauteur maximale */
+    width: 60%; /* Largeur relative */
+    max-width: 700px; /*  argeur maximale */
+    margin: 8px auto 20px; /* Espacement par rapport à la navbar et centrage */
+    display: flex;
+    flex-direction: column;
+    background: #fff; /* Fond optionnel */
+    border-radius: 12px; /* Coins arrondis */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Ombre légère */
+    padding: 20px;
+    position: relative;
+  }
+  
+  .message-container {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+  }
+  
+  /* Suppression des styles mobiles inutiles */
+  @media (max-width: 768px) {
+    .chat-container {
+        width: 90%;
+        max-width: 100%;
+        height: 80vh;
+        margin: 30px auto 20px;
+    }
+  }
+  

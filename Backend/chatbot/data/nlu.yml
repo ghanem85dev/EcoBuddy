@@ -1,0 +1,195 @@
+version: "3.1"
+
+nlu:
+  - intent: greet
+    examples: |
+      - salut
+      - bonjour
+      - coucou
+      - salut tout le monde
+      - bonsoir
+      - hey
+      - salut ça va ?
+      - bon matin
+      - bonne journée
+      - hello
+
+  - intent: goodbye
+    examples: |
+      - à bientôt
+      - au revoir
+      - à plus
+      - bonne nuit
+      - bye
+      - à la prochaine
+      - à tout à l'heure
+      - à plus tard
+
+  - intent: affirm
+    examples: |
+      - oui
+      - d'accord
+      - bien sûr
+      - tout à fait
+      - c'est bon
+      - ok
+      - c'est exact
+      - absolument
+
+  - intent: deny
+    examples: |
+      - non
+      - pas du tout
+      - je ne pense pas
+      - non merci
+      - je ne crois pas
+      - pas vraiment
+      - je n'aime pas ça
+
+  - intent: mood_great
+    examples: |
+      - parfait
+      - super
+      - génial
+      - je me sens très bien
+      - excellent
+      - c'est fantastique
+      - au top
+      - tout va bien
+      - je suis en pleine forme
+      - je me sens incroyable
+
+  - intent: mood_unhappy
+    examples: |
+      - ma journée a été horrible
+      - je suis triste
+      - je me sens mal
+      - je suis déçu
+      - très triste
+      - je suis vraiment déprimé
+      - pas bien
+      - je suis fatigué
+      - je ne me sens pas bien
+      - je suis déprimé
+
+  - intent: bot_challenge
+    examples: |
+      - es-tu un bot ?
+      - es-tu humain ?
+      - est-ce que je parle à un bot ?
+      - est-ce que je parle à un humain ?
+
+  - intent: demande_conseils
+    examples: |
+      - comment puis-je économiser de l'énergie ?
+      - as-tu des conseils pour réduire ma consommation ?
+      - que puis-je faire pour réduire ma facture ?
+      - quels sont les moyens d'économiser de l'énergie ?
+      - que puis-je changer chez moi pour économiser de l'énergie ?
+      - peux-tu me donner des astuces pour économiser ?
+
+  - intent: demande_alertes
+    examples: |
+      - ai-je dépassé mon budget énergétique ?
+      - est-ce que ma consommation est trop élevée ?
+      - avez-vous des alertes concernant ma consommation ?
+      - est-ce que je suis sur le point de dépasser mon budget ?
+      - peux-tu m'alerter si ma consommation augmente trop ?
+
+  - intent: demander_eco_points
+    examples: |
+      - combien d'éco-points ai-je ?
+      - combien de points j'ai gagnés ?
+      - quels sont mes éco-points actuels ?
+      - combien d'éco-points ai-je accumulés ?
+      - puis-je savoir mes points écologiques ?
+      - où puis-je voir mes éco-points ?
+  
+
+  - intent: demande_empreinte_carbone
+    examples: |
+      - quelle est mon empreinte carbone ?
+      - combien d'émissions de CO2 ai-je généré ?
+      - quel est l'impact environnemental de ma consommation ?
+      - mon empreinte carbone est-elle trop élevée ?
+      - peux-tu me donner un aperçu de mon empreinte carbone ?
+
+
+  - intent: demande_consommation
+    examples: |
+         - quelle est ma consommation ce mois-ci ?
+         - combien j'ai consommé ce mois ?
+         - donne-moi ma consommation actuelle
+         - je veux savoir ma consommation
+         - consommation du mois
+         - affiche ma consommation
+         - quel est mon usage énergétique ce mois ?
+
+  - intent: ask_most_consuming_site
+    examples: |
+        - Quel est mon site le plus énergivore ?
+        - Quel site consomme le plus ?
+        - Montre-moi le site avec la plus haute consommation
+        - Quel est mon site le plus gourmand en énergie ?
+        - Quelle quantité d'énergie consomme mon site le plus gourmand ?
+        - Combien d'énergie utilise mon site le plus énergivore ?
+        - Quel site utilise le plus d'électricité et combien ?
+        - Donne-moi la consommation exacte de mon site le plus énergivore
+        - Quel site a la consommation la plus élevée et de combien ?
+
+  - intent: ask_least_consuming_site  
+    examples: |
+        - Quel site consomme le moins ?
+        - Quel est mon site le plus économe ?
+        - Montre-moi le site avec la consommation la plus basse
+        - Quelle quantité d'énergie consomme mon site le plus économe ?
+        - Combien d'électricité utilise mon site le moins énergivore ?
+        - Quel site a la consommation la plus faible et combien ?
+        - Donne-moi la consommation exacte de mon site le plus économe
+        - Quel site utilise le moins d'énergie et quelle est la quantité ?
+
+  - intent: ask_most_consuming_device
+    examples: |
+      - Quel appareil consomme le plus ?
+      - Quel est mon appareil le plus gourmand ?
+      - Montre-moi l'appareil avec la plus haute consommation
+      - Quelle quantité d'énergie utilise mon appareil le plus énergivore ?
+      - Combien consomme mon appareil le plus gourmand ?
+      - Donne-moi la consommation exacte de mon appareil qui consomme le plus
+      - Quel appareil a la plus grande consommation et combien ?
+      - Quel est l'appareil qui utilise le plus d'électricité et quelle quantité ?
+      - Donne-moi la consommation de mon appareil qui consomme le plus
+
+  - intent: ask_least_consuming_device
+    examples: |
+      - Quel appareil consomme le moins ?
+      - Quel est mon appareil le plus économe ?
+      - Montre-moi l'appareil avec la consommation la plus basse
+      - Quelle quantité d'énergie utilise mon appareil le plus économe ?
+      - Combien consomme mon appareil le moins énergivore ?
+      - Donne-moi la consommation exacte de mon appareil qui consomme le moins
+      - Quel appareil a la plus faible consommation et combien ?
+      - Quel est l'appareil qui utilise le moins d'électricité et quelle quantité ?
+
+  - intent: ask_combined
+    examples: |
+      - donne conso et appareil energivore
+      - je veux ma consommation et le plus gourmand
+      - montre les deux trucs : conso totale et appareil vorace
+      - besoin des chiffres et du pire élève
+      - balance la conso et le matos ki bouf
+  - intent: demande_incomplete
+    examples: |
+      - j'ai oublié de préciser
+      - c'est pas complet
+      - j'ai pas tout dit
+      - il manque des infos
+      - c'est lequel déjà ?
+
+  - intent: both_requests
+    examples: |
+      - les deux
+      - oui les deux
+      - je veux les deux options
+      - affiche tout
+      - les deux s'il te plaît

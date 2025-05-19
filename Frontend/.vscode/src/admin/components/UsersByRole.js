@@ -11,6 +11,7 @@ const UsersByRoleChart = () => {
   const [usersData, setUsersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hoveredItem, setHoveredItem] = useState(null);
   const { idUser } = useContext(AuthContext);
 
   const fetchUsersData = async () => {
@@ -37,40 +38,56 @@ const UsersByRoleChart = () => {
     fetchUsersData();
   }, []);
 
-  // Préparation des données pour le graphique
-  const roles = usersData.map(item => item.role);
-  const counts = usersData.map(item => item.count);
-  
+  // Palette de couleurs harmonieuse
   const colorPalette = [
-    "#001952", "#043775", "#0078B8", "#00B6DA", "#93E1F0", 
-    "#12769E", "#1E40AF"
+    '#2DBDAC', // Teal
+    
+    '#A7E0E0', // Pink
+    '#17B3DE', // Blue
+    '#FFA630', // Orange
+    '#A78BFA', // Purple
+    '#93E1F0', // Light Blue
+    '#12769E', // Dark Blue
   ];
 
   const data = {
-    labels: roles,
+    labels: usersData.map(item => item.role),
     datasets: [{
       label: 'Nombre d\'utilisateurs',
-      data: counts,
+      data: usersData.map(item => item.count),
       backgroundColor: colorPalette,
-      borderColor: "#1E3A8A",
-      borderWidth: 1,
+      borderColor: '#fff',
+      borderWidth: 2,
+      hoverBorderWidth: 3,
+      hoverOffset: 10,
     }]
   };
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: { 
-        position: 'top', 
+        position: 'right', 
         labels: { 
-          color: '#1E3A8A',
-          font: { weight: 'bold' }
+          color: '#4B5563',
+          font: { 
+            family: 'Inter, sans-serif',
+            size: 12,
+            weight: '500'
+          },
+          padding: 20,
+          usePointStyle: true,
         } 
       },
       tooltip: { 
-        backgroundColor: "#0078B8", 
-        titleColor: "#FFF", 
-        bodyColor: "#FFF",
+        backgroundColor: "#FFF",
+        titleColor: "#111827",
+        bodyColor: "#4B5563",
+        borderColor: "#E5E7EB",
+        borderWidth: 1,
+        padding: 12,
+        boxShadow: "0px 2px 10px rgba(0,0,0,0.1)",
         callbacks: {
           label: (context) => {
             const label = context.label || '';
@@ -82,92 +99,124 @@ const UsersByRoleChart = () => {
         }
       },
     },
+    onClick: (_, elements) => {
+      if (elements.length > 0) {
+        const index = elements[0].index;
+        setHoveredItem(index);
+      }
+    },
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="text-blue-600 font-semibold">Chargement en cours...</div>
-    </div>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex justify-center items-center h-64"
+    >
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+    </motion.div>
   );
 
   if (error) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="text-red-500 font-semibold">{error}</div>
-    </div>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="bg-white p-6 rounded-lg shadow-lg"
+    >
+      <div className="text-red-500 font-semibold text-center py-10">{error}</div>
+    </motion.div>
   );
 
+  const totalUsers = usersData.reduce((acc, item) => acc + item.count, 0);
+
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl rounded-2xl p-6 border border-blue-200">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-blue-900">Répartition des utilisateurs par rôle</h2>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white shadow-lg rounded-xl overflow-hidden p-6"
+    >
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Répartition des utilisateurs par rôle</h2>
+          <p className="text-sm text-gray-500">Nombre d'utilisateurs selon leur rôle dans l'application</p>
+        </div>
+        <div className="mt-4 md:mt-0 flex items-center gap-2">
+          <span className="text-sm text-gray-500">Total:</span>
+          <span className="font-semibold">{totalUsers} utilisateurs</span>
+        </div>
       </div>
 
-      {/* Contenu principal */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Graphique */}
-        <div className="flex-1 bg-white p-4 rounded-xl shadow-md border border-blue-100">
-          <div style={{ position: 'relative', height: '350px', width: '100%' }}>
-            <Pie 
-              data={data} 
-              options={{
-                ...options,
-                maintainAspectRatio: false,
-                responsive: true
-              }} 
-            />
-          </div>
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Graphique - prend toute la largeur sur mobile, 1/2 sur desktop */}
+        <div className="w-full lg:w-1/2 h-80 relative">
+          <Pie data={data} options={options} />
         </div>
 
-        {/* Tableau */}
-        <div className="flex-1 bg-white p-4 rounded-xl shadow-md border border-blue-100">
-          <h3 className="text-lg font-semibold text-blue-800 mb-4">Détails par rôle</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-[#0078B8] text-white">
+        {/* Tableau - prend toute la largeur sur mobile, 1/2 sur desktop */}
+        <div className="w-full lg:w-1/2">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="p-3 font-semibold rounded-tl-lg">Rôle</th>
-                  <th className="p-3 font-semibold rounded-tr-lg">Nombre d'utilisateurs</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pourcentage</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white divide-y divide-gray-200">
                 {usersData.map((item, index) => {
-                  const total = usersData.reduce((acc, item) => acc + item.count, 0);
-                  const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                  const percentage = Math.round((item.count / totalUsers) * 100);
+                  const isHovered = hoveredItem === index || hoveredItem === null;
+                  const color = colorPalette[index % colorPalette.length];
                   
                   return (
-                    <tr key={index} className={`border-b border-blue-100 ${index % 2 === 0 ? 'bg-blue-50' : 'bg-white'}`}>
-                      <td className="p-3 text-blue-900">{item.role}</td>
-                      <td className="p-3">
+                    <motion.tr 
+                      key={index}
+                      initial={{ opacity: 0 }}
+                      animate={{ 
+                        opacity: isHovered ? 1 : 0.6,
+                        backgroundColor: isHovered ? '#f9fafb' : '#fff'
+                      }}
+                      transition={{ duration: 0.2 }}
+                      onMouseEnter={() => setHoveredItem(index)}
+                      onMouseLeave={() => setHoveredItem(null)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <span className="font-bold text-blue-700 mr-2">{item.count} utilisateurs</span>
-                          <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
-                            {percentage}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-blue-100 rounded-full h-2 mt-1">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${percentage}%` }}
-                          ></div>
+                          <div className="flex-shrink-0 h-3 w-3 rounded-full" style={{ backgroundColor: color }}></div>
+                          <div className="ml-2 text-sm font-medium text-gray-900">{item.role}</div>
                         </div>
                       </td>
-                    </tr>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.count}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-500 mr-2">{percentage}%</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full" 
+                              style={{ 
+                                width: `${percentage}%`,
+                                backgroundColor: color
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </td>
+                    </motion.tr>
                   );
                 })}
-                {usersData.length > 0 && (
-                  <tr className="bg-[#0078B8] text-white font-bold">
-                    <td className="p-3 rounded-bl-lg">Total</td>
-                    <td className="p-3 rounded-br-lg">
-                      {usersData.reduce((acc, item) => acc + item.count, 0)} utilisateurs
-                    </td>
-                  </tr>
-                )}
+                <tr className="bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Total</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{totalUsers}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">100%</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

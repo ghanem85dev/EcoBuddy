@@ -1,0 +1,71 @@
+.invitation-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    transition: box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .invitation-card:hover {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-header {
+    margin-bottom: 1rem;
+    flex-grow: 1;
+  }
+  
+  .site-name {
+    font-size: 1.2rem;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  .card-email {
+    display: flex;
+    gap: 0.5rem;
+    color: #4a5568;
+    font-size: 0.9rem;
+  }
+  
+  .email-label {
+    font-weight: 500;
+  }
+  
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+  }
+  
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  
+  .status-icon {
+    font-size: 0.9rem;
+  }
+  
+  .date-info {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: #718096;
+  }
+  
+  .date-icon {
+    font-size: 0.9rem;
+  }

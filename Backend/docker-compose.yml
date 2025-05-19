@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile.alpine  # Utiliser une image Alpine plus légère
+    ports: 
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - energy-service
+      - chatbot-service
+
+  energy-service:
+    build:
+      context: ./energy-service
+      args:
+        PYTHON_VERSION: "3.9-slim"  # Version allégée de Python
+    environment:
+      - POSTGRES_URL=postgresql://postgres:${DB_PASSWORD:-98664872}@energy-db:5432/myenergyhub
+      - MONGO_URL=mongodb://mongo:27017/energy_analytics
+    volumes:
+      - ./energy-service/app:/app  # Montage direct pour éviter la duplication
+    depends_on:
+      - energy-db
+      - mongo
+
+  chatbot-service:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile  # Version optimisée
+    volumes:
+      - ./chatbot/actions:/app/actions  # Montage direct du code
+    depends_on:
+      - energy-service
+
+  energy-db:
+    image: postgres:13-alpine  # Version Alpine plus légère
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-98664872}
+      POSTGRES_DB: myenergyhub
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:5.0  # Version spécifique plus stable
+    volumes:
+      - mongo_data:/data/db
+    command: ["--wiredTigerCacheSizeGB=0.5"]  # Limite la mémoire utilisée
+
+volumes:
+  postgres_data:
+    driver_opts:
+      type: tmpfs  # Optionnel: stockage en RAM si les données peuvent être recréées
+      device: tmpfs
+  mongo_data:

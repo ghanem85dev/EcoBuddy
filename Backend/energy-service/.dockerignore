@@ -1,0 +1,18 @@
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Environnements virtuels
+**/venv
+**/env
+**/.venv
+
+# Fichiers de configuration locale
+**/.env
+**/local_settings.py
+
+# Logs et dumps
+**/*.log
+**/*.sqlite3

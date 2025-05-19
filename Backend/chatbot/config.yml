@@ -1,0 +1,48 @@
+# The config recipe.
+# https://rasa.com/docs/rasa/model-configuration/
+recipe: default.v1
+
+# The assistant project unique identifier
+# This default value must be replaced with a unique assistant name within your deployment
+assistant_id: 20250410-180522-vibrato-submodule
+
+# Configuration for Rasa NLU.
+# https://rasa.com/docs/rasa/nlu/components/
+language: en
+
+pipeline:
+- name: WhitespaceTokenizer
+- name: RegexFeaturizer
+- name: LanguageModelFeaturizer  # Nouveau - Utilise un modèle de langue
+  model_name: "bert"             # Version light pour le français
+- name: CountVectorsFeaturizer
+  analyzer: "char_wb"
+  min_ngram: 1
+  max_ngram: 5                   # Augmenté à 5 pour mieux capturer les mots
+  strip_accents: "unicode"
+- name: DIETClassifier
+  epochs: 150                    # Augmenté
+  constrain_similarities: true
+  hidden_layers_sizes:           # Architecture plus profonde
+    text: [256, 128]
+  embedding_dimension: 64
+- name: EntitySynonymMapper
+- name: FallbackClassifier
+  threshold: 0.45               # Seuil plus sensible
+  ambiguity_threshold: 0.08
+
+# Configuration for Rasa Core.
+# https://rasa.com/docs/rasa/core/policies/
+policies: null
+# # No configuration for policies was provided. The following default policies were used to train your model.
+# # If you'd like to customize them, uncomment and adjust the policies.
+# # See https://rasa.com/docs/rasa/policies for more information.
+#   - name: MemoizationPolicy
+#   - name: RulePolicy
+#   - name: UnexpecTEDIntentPolicy
+#     max_history: 5
+#     epochs: 100
+#   - name: TEDPolicy
+#     max_history: 5
+#     epochs: 100
+#     constrain_similarities: true

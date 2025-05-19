@@ -1,466 +1,516 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineFilePdf, AiOutlineCheck, AiOutlineClockCircle, AiOutlineCloseCircle } from "react-icons/ai";
-import { FaHome } from "react-icons/fa";
-import { motion } from "framer-motion";
-import residenceImage from "../../assets/residence.png";
-import { PiMapPinArea } from "react-icons/pi";
-import { useTheme } from "../../commun/context/ThemeContext";
+import React, { useState, useEffect, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiPlus, FiX, FiFilter, FiRefreshCw, FiAlertCircle, FiSearch, FiBriefcase, FiLayers } from 'react-icons/fi';
+import SiteCard from '../components/SiteCard';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from "../../commun/context/AuthContext";
 
-const SitesSettings = () => {
-  const { id } = useParams();
+const ListSites = () => {
+  const { idUser, role } = useContext(AuthContext);
   const navigate = useNavigate();
-  const location = useLocation();
-  const [residences, setResidences] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [newResidence, setNewResidence] = useState({ nom: '', adresse: '', latitude: 0, longitude: 0, certificat_propriete: null });
-  const [showForm, setShowForm] = useState(false);
-  const [editingResidence, setEditingResidence] = useState(null);
-  const [coordinates, setCoordinates] = useState(null);
-  const { theme } = useTheme();
+  const [state, setState] = useState({
+    sites: [],
+    loading: true,
+    error: null,
+    filter: "all",
+    refresh: false,
+    searchQuery: ""
+  });
 
-  // Styles dynamiques en fonction du thème
-  const bgColor = theme === "dark" ? "bg-[#08112F] text-white" : "bg-white text-[#003366]";
-  const cardBgColor = theme === "dark" ? "bg-[#5A77DF] text-white" : "bg-[#f0faff] text-[#003366]";
-  const buttonBg = theme === "dark" ? "bg-[#5A77DF]" : "bg-[#003366]";
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({
+    nom: '',
+    adresse: '',
+    latitude: '',
+    longitude: '',
+    certificat_propriete: null,
+    entreprise_id: '',
+    categorie_id: ''
+  });
 
-  // Récupérer les coordonnées et les données du formulaire après retour de la carte
+  const [entreprises, setEntreprises] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   useEffect(() => {
-    const savedData = localStorage.getItem("residenceData");
-    const coordinates = localStorage.getItem("coordinates");
-    const editingResidenceId = localStorage.getItem("editingResidenceId");
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/categories/sites');
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des catégories:", error);
+      }
+    };
 
-    if (savedData) {
+    const fetchUserEntreprises = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/entreprises/user/${idUser}`);
+        const data = await response.json();
+        setEntreprises(data);
+        
+        if (data.length === 1) {
+          setFormData(prev => ({ ...prev, entreprise_id: data[0].idEntreprise }));
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des entreprises:", error);
+      }
+    };
+
+    if (role === 'entreprise') {
+      fetchUserEntreprises();
+      fetchCategories();
+    }
+  }, [idUser, role]);
+
+  useEffect(() => {
+    const savedData = localStorage.getItem("siteData");
+    const savedCoordinates = localStorage.getItem("coordinates");
+    const returningFromMap = localStorage.getItem("returningFromMap");
+    
+    if (returningFromMap === "true") {
+      setShowAddModal(true);
+      localStorage.removeItem("returningFromMap");
+    }
+  
+    if (savedData && savedCoordinates) {
       const parsedData = JSON.parse(savedData);
-      const parsedDataCoordinates = JSON.parse(coordinates);
-      setNewResidence({
+      const parsedCoordinates = JSON.parse(savedCoordinates);
+      
+      setFormData(prev => ({
+        ...prev,
         nom: parsedData.nom || '',
         adresse: parsedData.adresse || '',
-        latitude: parsedDataCoordinates.lat || 0,
-        longitude: parsedDataCoordinates.lng || 0,
-        certificat_propriete: parsedData.certificat_propriete || null,
-      });
-
-      if (editingResidenceId) {
-        const residenceToEdit = residences.find(residence => residence.idSite === parseInt(editingResidenceId));
-        if (residenceToEdit) {
-          setEditingResidence(residenceToEdit);
-        }
-      }
-
-      setShowForm(true);
+        latitude: parsedCoordinates.lat || '',
+        longitude: parsedCoordinates.lng || '',
+        entreprise_id: parsedData.entreprise_id || prev.entreprise_id,
+        categorie_id: parsedData.categorie_id || prev.categorie_id
+      }));
+      
+      setShowAddModal(true);
+      
+      localStorage.removeItem("siteData");
+      localStorage.removeItem("coordinates");
     }
-  }, [residences]);
+  }, []);
 
-  // Récupérer la liste des résidences
-  const fetchResidences = async () => {
-    if (!id) {
-      setError('ID utilisateur manquant');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+  const fetchSites = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/sites/${id}`);
-      if (!response.ok) throw new Error('Erreur lors de la récupération des résidences');
-
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await fetch(`http://localhost:8000/sites/${idUser}`);
       const data = await response.json();
-      setResidences(data);
+      setState(prev => ({ ...prev, sites: data, loading: false }));
     } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
+      setState(prev => ({
+        ...prev,
+        error: error.message,
+        loading: false
+      }));
     }
   };
 
   useEffect(() => {
-    fetchResidences();
-  }, [id]);
-
-  // Grouper les résidences par statut
-  const approvedResidences = residences.filter((site) => site.statut_approbation === "approve");
-  const pendingResidences = residences.filter((site) => site.statut_approbation === "en_attente");
-  const rejectedResidences = residences.filter((site) => site.statut_approbation === "non_approve");
-
-  // Supprimer une résidence
-  const handleDelete = async (idSite) => {
-    if (window.confirm('Voulez-vous supprimer cette résidence ?')) {
-      try {
-        const response = await fetch(`http://localhost:8000/sites/${idSite}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Erreur lors de la suppression');
-
-        setResidences((prev) => prev.filter((residence) => residence.idSite !== idSite));
-      } catch (error) {
-        setError(error.message);
-      }
+    if (idUser) {
+      fetchSites();
     }
+  }, [idUser, state.refresh]);
+
+  const handleUpdate = async () => {
+    await fetchSites();
   };
-
-  // Modifier une résidence
-  const handleModify = (residence) => {
-    setEditingResidence(residence);
-    setNewResidence({
-      nom: residence.nom,
-      adresse: residence.adresse,
-      latitude: residence.latitude,
-      longitude: residence.longitude,
-      certificat_propriete: residence.certificat_propriete,
-    });
-    setShowForm(true);
-  };
-
-  // Ajouter ou mettre à jour une résidence
-  const handleAddOrUpdateResidence = async () => {
-    if (!newResidence.nom || !newResidence.adresse) {
-      setError("Le nom et l'adresse sont requis.");
-      return;
-    }
-
-    try {
-      let url = `http://localhost:8000/sites/${id}/1`;
-      let method = "POST";
-
-      if (editingResidence) {
-        url = `http://localhost:8000/sites/${editingResidence.idSite}/1`;
-        method = "PUT";
-      }
-
-      const formData = new FormData();
-      formData.append("nom", newResidence.nom);
-      formData.append("adresse", newResidence.adresse);
-      formData.append("latitude", newResidence.latitude);
-      formData.append("longitude", newResidence.longitude);
-      if (newResidence.certificat_propriete) {
-        formData.append("certificat_propriete", newResidence.certificat_propriete);
-      }
-
-      const response = await fetch(url, {
-        method,
-        body: formData,
-      });
-
-      localStorage.removeItem("residenceData");
-      localStorage.removeItem("editingResidenceId");
-
-      if (!response.ok) throw new Error(`Erreur lors de ${editingResidence ? 'la modification' : "l'ajout"}`);
-
-      fetchResidences(); // Recharger les résidences
-      setNewResidence({ nom: '', adresse: '', latitude: 0, longitude: 0, certificat_propriete: null });
-      setEditingResidence(null);
-      setShowForm(false);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  // Gérer le téléchargement du fichier PDF
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setNewResidence({ ...newResidence, certificat_propriete: file });
-    } else {
-      setError("Veuillez sélectionner un fichier PDF valide.");
-    }
-  };
-
-  // Télécharger le certificat de propriété
-  const handleDownloadCertificat = async (siteId) => {
-    try {
-      const response = await fetch(`http://localhost:8000/site/certificat/${siteId}`);
-      if (!response.ok) throw new Error('Erreur lors du téléchargement du certificat');
   
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "certificat_propriete.pdf"; // Nom du fichier à télécharger
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleDelete = async () => {
+    await fetchSites();
   };
 
-  // Redirection vers la carte pour ajouter/modifier une résidence
+  const handleAdd = async () => {
+    await fetchSites();
+    setShowAddModal(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    setFormData(prev => ({ ...prev, certificat_propriete: e.target.files[0] }));
+  };
+
   const handleGoToMap = () => {
-    localStorage.setItem("residenceData", JSON.stringify({
-      nom: newResidence.nom || '',
-      adresse: newResidence.adresse || '',
-      certificat_propriete: newResidence.certificat_propriete || null,
+    localStorage.setItem("siteData", JSON.stringify({
+      nom: formData.nom,
+      adresse: formData.adresse,
+      certificat_propriete: formData.certificat_propriete,
+      entreprise_id: formData.entreprise_id,
+      categorie_id: formData.categorie_id
     }));
-
-    if (editingResidence) {
-      localStorage.setItem("editingResidenceId", editingResidence.idSite);
-    }
-
+  
+    localStorage.setItem("coordinates", JSON.stringify({
+      lat: formData.latitude || 0,
+      lng: formData.longitude || 0
+    }));
+  
     navigate('/maps', {
       state: {
-        coordinates: { lat: newResidence.latitude, lng: newResidence.longitude },
-        isEditing: true,
-        residenceId: editingResidence?.idSite,
+        coordinates: { 
+          lat: formData.latitude || 0, 
+          lng: formData.longitude || 0 
+        },
+        isEditing: true
       },
     });
   };
 
-  // Redirection vers la carte pour visualiser ou modifier la position d'une résidence existante
-  const handleGoToMapWithSitePosition = async (siteId) => {
+  const handleSubmitAdd = async (e) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:8000/site/position/${siteId}`);
-      if (!response.ok) throw new Error('Erreur lors de la récupération des coordonnées du site');
+      const formDataToSend = new FormData();
+      formDataToSend.append('nom', formData.nom);
+      formDataToSend.append('adresse', formData.adresse);
+      formDataToSend.append('latitude', formData.latitude);
+      formDataToSend.append('longitude', formData.longitude);
+      
+      if (formData.certificat_propriete) {
+        formDataToSend.append('certificat_propriete', formData.certificat_propriete);
+      }
 
-      const { latitude, longitude } = await response.json();
-      navigate('/maps', {
-        state: {
-          coordinates: { lat: latitude, lng: longitude },
-          isEditing: false, // Désactiver le mode édition
-          residenceId: siteId,
-        },
+      let endpoint;
+      if (role === 'entreprise') {
+        endpoint = `http://localhost:8000/sites/entreprise/${formData.entreprise_id}/${idUser}/${formData.categorie_id}`;
+      } else {
+        endpoint = `http://localhost:8000/sites/${idUser}/1`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'ajout du site');
+      }
+
+      await handleAdd();
+      setFormData({
+        nom: '',
+        adresse: '',
+        latitude: '',
+        longitude: '',
+        certificat_propriete: null,
+        entreprise_id: entreprises.length === 1 ? entreprises[0].idEntreprise : '',
+        categorie_id: ''
       });
     } catch (error) {
-      setError(error.message);
+      setState(prev => ({ ...prev, error: error.message }));
     }
   };
 
-  return (
-    <section className={`${bgColor} min-h-screen p-10`}>
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Illustration */}
-        <div className="flex items-center justify-center mt-10">
-          <motion.img
-            src={residenceImage}
-            alt="Illustration résidence"
-            className="w-2/3 md:w-1/2"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          />
-        </div>
+  const getStatusCounts = () => {
+    const counts = {
+      all: state.sites.length,
+      approve: 0,
+      non_approve: 0,
+      en_attente: 0
+    };
 
-        {/* Liste des résidences */}
-        <div>
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-3xl font-bold text-[#003366] mb-6 text-center md:text-left"
-          >
-            Vos Résidences
-          </motion.h1>
+    state.sites.forEach(res => {
+      const status = res.statut_approbation?.toLowerCase();
+      if (status === 'approve') counts.approve++;
+      else if (status === 'non_approve') counts.non_approve++;
+      else if (status === 'en_attente') counts.en_attente++;
+    });
 
-          <div className="flex justify-center md:justify-start mb-6">
-            <motion.button
-              onClick={() => setShowForm(true)}
-              className={`${buttonBg} text-white py-2 px-6 rounded-lg hover:bg-[#0055A4] transition-all`}
-              whileTap={{ scale: 0.95 }}
-            >
-              Ajouter une résidence
-            </motion.button>
-          </div>
+    return [
+      { value: "all", label: "Toutes", count: counts.all },
+      { value: "approve", label: "Approuvées", count: counts.approve },
+      { value: "non_approve", label: "Refusées", count: counts.non_approve },
+      { value: "en_attente", label: "En attente", count: counts.en_attente }
+    ];
+  };
 
-          {/* Résidences approuvées */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Résidences Approuvées</h2>
-            <div className="space-y-4">
-              {approvedResidences.map((site) => (
-                <ResidenceCard
-                  key={site.idSite}
-                  site={site}
-                  handleModify={handleModify}
-                  handleDelete={handleDelete}
-                  handleDownloadCertificat={handleDownloadCertificat}
-                  handleGoToMapWithSitePosition={handleGoToMapWithSitePosition}
-                  cardBgColor={cardBgColor}
-                />
-              ))}
-            </div>
-          </div>
+  const statusFilters = getStatusCounts();
 
-          {/* Résidences en attente */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Résidences en Attente</h2>
-            <div className="space-y-4">
-              {pendingResidences.map((site) => (
-                <ResidenceCard
-                  key={site.idSite}
-                  site={site}
-                  handleModify={handleModify}
-                  handleDelete={handleDelete}
-                  handleDownloadCertificat={handleDownloadCertificat}
-                  handleGoToMapWithSitePosition={handleGoToMapWithSitePosition}
-                  cardBgColor={cardBgColor}
-                />
-              ))}
-            </div>
-          </div>
+  const filteredSites = state.sites.filter(res => {
+    const matchesFilter = state.filter === "all" || res.statut_approbation?.toLowerCase() === state.filter;
+    const matchesSearch = res.nom?.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
+                         res.adresse?.toLowerCase().includes(state.searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
-          {/* Résidences non approuvées */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Résidences Non Approuvées</h2>
-            <div className="space-y-4">
-              {rejectedResidences.map((site) => (
-                <ResidenceCard
-                  key={site.idSite}
-                  site={site}
-                  handleModify={handleModify}
-                  handleDelete={handleDelete}
-                  handleDownloadCertificat={handleDownloadCertificat}
-                  handleGoToMapWithSitePosition={handleGoToMapWithSitePosition}
-                  cardBgColor={cardBgColor}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+  if (state.loading || !idUser) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="text-gray-500 mb-4"
+        >
+          <FiRefreshCw size={32} />
+        </motion.div>
+        <p className="text-gray-400">Chargement des résidences...</p>
       </div>
+    );
+  }
 
-      {/* Pop-up d'ajout/modification */}
-      {showForm && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-2xl font-semibold text-[#003366] mb-4">
-              {editingResidence ? 'Modifier la résidence' : 'Ajouter une résidence'}
-            </h3>
-            <input
-              type="text"
-              placeholder="Nom de la résidence"
-              value={newResidence.nom}
-              onChange={(e) => setNewResidence({ ...newResidence, nom: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
-            />
-            <input
-              type="text"
-              placeholder="Adresse de la résidence"
-              value={newResidence.adresse}
-              onChange={(e) => setNewResidence({ ...newResidence, adresse: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
-            />
+  if (state.error) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="bg-white rounded-xl p-6 max-w-md mx-auto mt-10 text-center shadow-sm"
+      >
+        <div className="text-red-500 mb-4">
+          <FiAlertCircle size={48} className="mx-auto" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Erreur de chargement</h3>
+        <p className="text-gray-600 mb-6">{state.error}</p>
+        <button
+          onClick={() => setState(prev => ({ ...prev, refresh: !prev.refresh, error: null }))}
+          className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+        >
+          <FiRefreshCw />
+          Réessayer
+        </button>
+      </motion.div>
+    );
+  }
 
-            {/* Champ pour télécharger le fichier PDF */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Certificat de propriété (PDF)</label>
+  return (
+    <div className="relative">
+      <AnimatePresence>
+        {showAddModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
+              onClick={() => setShowAddModal(false)}
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed inset-0 flex items-center justify-center p-4 z-50"
+            >
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto relative">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-50"
+                >
+                  <FiX size={24} />
+                </button>
+                
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Ajouter une résidence</h3>
+                  </div>
+
+                  <form onSubmit={handleSubmitAdd}>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nom du site*</label>
+                      <input
+                        type="text"
+                        name="nom"
+                        value={formData.nom}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                      />
+                    </div>
+
+                    {role === 'entreprise' && (
+                      <>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Entreprise*</label>
+                          <select
+                            name="entreprise_id"
+                            value={formData.entreprise_id}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border rounded-md"
+                            required
+                            disabled={entreprises.length === 1}
+                          >
+                            {entreprises.length > 1 && <option value="">Sélectionner une entreprise</option>}
+                            {entreprises.map(entreprise => (
+                              <option key={entreprise.idEntreprise} value={entreprise.idEntreprise}>
+                                {entreprise.nom}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie*</label>
+                          <select
+                            name="categorie_id"
+                            value={formData.categorie_id}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border rounded-md"
+                            required
+                          >
+                            <option value="">Sélectionner une catégorie</option>
+                            {categories.map(categorie => (
+                              <option key={categorie.idCategorieSite} value={categorie.idCategorieSite}>
+                                {categorie.nom}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse*</label>
+                      <input
+                        type="text"
+                        name="adresse"
+                        value={formData.adresse}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center mb-4">
+                      <label className="text-sm">Préciser la résidence sur la carte</label>
+                      <button
+                        type="button"
+                        onClick={handleGoToMap}
+                        className="bg-gray-600 text-white py-2 px-4 rounded-md"
+                      >
+                        Aller à la carte
+                      </button>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Certificat de propriété (PDF)
+                      </label>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleFileChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddModal(false)}
+                        className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </form>
+
+                  {state.error && (
+                    <div className="mt-4 text-sm text-red-600">
+                      {state.error}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
+              {statusFilters.map(({ value, label, count }) => (
+                <button
+                  key={value}
+                  onClick={() => setState(prev => ({ ...prev, filter: value }))}
+                  className={`flex items-center gap-2 text-sm ${
+                    state.filter === value ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <span>{label}</span>
+                  {count > 0 && (
+                    <span className="bg-gray-200 px-2 py-0.5 rounded-full text-xs">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
+                type="text"
+                placeholder="Rechercher..."
+                value={state.searchQuery}
+                onChange={(e) => setState(prev => ({ ...prev, searchQuery: e.target.value }))}
+                className="pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 w-full"
               />
             </div>
-
-            {/* Afficher les coordonnées */}
-            {coordinates && (
-              <div className="mb-4">
-                <p className="text-sm">Coordonnées: {coordinates.lat}, {coordinates.lng}</p>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center">
-              <label className="text-sm">Préciser la résidence sur la carte</label>
-              <button
-                onClick={handleGoToMap}
-                className="bg-[#003366] text-white py-2 px-4 rounded-md"
-              >
-                Aller à la carte
-              </button>
-            </div>
-
-            <div className="flex gap-4 mt-4">
-              <button onClick={handleAddOrUpdateResidence} className="bg-[#003366] text-white py-2 px-4 rounded-md">
-                {editingResidence ? 'Modifier' : 'Ajouter'}
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("residenceData");
-                  localStorage.removeItem("editingResidenceId");
-                  setNewResidence({ nom: '', adresse: '', latitude: 0, longitude: 0, certificat_propriete: null });
-                  setEditingResidence(null);
-                  setShowForm(false);
-                }}
-                className="bg-gray-500 text-white py-2 px-4 rounded-md"
-              >
-                Annuler
-              </button>
-            </div>
+            
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-black hover:bg-black text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <FiPlus size={18} />
+              <span>Ajouter</span>
+            </button>
           </div>
         </div>
-      )}
-    </section>
-  );
-};
 
-// Composant pour afficher une carte de résidence
-const ResidenceCard = ({ site, handleModify, handleDelete, handleDownloadCertificat, handleGoToMapWithSitePosition, cardBgColor }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`${cardBgColor} p-5 rounded-xl shadow-lg border border-gray-300 hover:shadow-2xl transition-all flex justify-between items-center`}
-    >
-      <div className="flex items-center gap-4">
-        <FaHome className="text-3xl text-[#003366]" />
-        <div>
-          <p className="text-lg font-semibold">{site.nom}</p>
-          <p className="text-sm text-[#0055A4]">{site.adresse}</p>
-          {/* Badge pour indiquer le statut */}
-          {site.statut_approbation === "approve" ? (
-            <div className="flex items-center gap-1 text-green-600">
-              <AiOutlineCheck /> Approuvé
-            </div>
-          ) : site.statut_approbation === "non_approve" ? (
-            <div className="flex items-center gap-1 text-red-600">
-              <AiOutlineCloseCircle /> Non approuvé
-            </div>
+        <div className="p-6">
+          {filteredSites.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300"
+            >
+              <p className="text-gray-500">
+                {state.searchQuery 
+                  ? "Aucun résultat trouvé pour votre recherche"
+                  : "Aucune résidence trouvée"}
+              </p>
+            </motion.div>
           ) : (
-            <div className="flex items-center gap-1 text-yellow-600">
-              <AiOutlineClockCircle /> En attente
-            </div>
+            <>
+              <div className="mb-4 text-sm text-gray-500">
+                {filteredSites.length} résidence(s) trouvée(s)
+                {state.filter !== "all" && ` (filtrée(s) par statut "${state.filter}")`}
+              </div>
+              
+              <motion.div 
+                layout
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              >
+                <AnimatePresence>
+                  {filteredSites.map(site => (
+                    <SiteCard 
+                      key={site.idSite} 
+                      site={site}
+                      onUpdate={handleUpdate}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </>
           )}
         </div>
       </div>
-
-      <div className="flex items-center gap-4">
-        {/* Bouton pour télécharger le PDF (toujours visible) */}
-        <button
-          onClick={() => handleDownloadCertificat(site.idSite)}
-          className={`text-[#003366] p-2 rounded-full hover:bg-[#003366] hover:text-white transition-all ${
-            !site.certificat_propriete_nom ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={!site.certificat_propriete_nom}
-        >
-          <AiOutlineFilePdf className="text-2xl" />
-        </button>
-
-        {/* Bouton pour voir la position sur la carte */}
-        <button
-          onClick={() => handleGoToMapWithSitePosition(site.idSite)}
-          className="text-[#003366] p-2 rounded-full hover:bg-[#003366] hover:text-white transition-all"
-        >
-          <PiMapPinArea className="text-2xl" />
-        </button>
-
-        {/* Bouton pour modifier (désactivé si le site n'est pas approuvé) */}
-        <button
-          onClick={() => handleModify(site)}
-          className={`text-[#003366] p-2 rounded-full hover:bg-[#003366] hover:text-white transition-all ${
-            site.statut_approbation === "non_approve" ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={site.statut_approbation === "non_approve"}
-        >
-          <AiOutlineEdit className="text-xl" />
-        </button>
-
-        {/* Bouton pour supprimer */}
-        <button
-          onClick={() => handleDelete(site.idSite)}
-          className="text-red-600 p-2 rounded-full hover:bg-red-600 hover:text-white transition-all"
-        >
-          <AiOutlineDelete className="text-xl" />
-        </button>
-      </div>
-    </motion.div>
+    </div>
   );
 };
 
-export default SitesSettings;
+export default ListSites;

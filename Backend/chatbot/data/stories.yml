@@ -1,0 +1,61 @@
+# stories.yml
+version: "3.1"
+
+stories:
+  # Happy path - unique
+  - story: happy path
+    steps:
+      - intent: greet
+      - action: utter_greet
+      - intent: mood_great
+      - action: utter_happy
+
+  # Sad paths - make them distinct
+  - story: sad path with help accepted
+    steps:
+      - intent: greet
+      - action: utter_greet
+      - intent: mood_unhappy
+      - action: utter_cheer_up
+      - intent: affirm
+      - action: utter_did_that_help
+      - intent: affirm
+      - action: utter_happy
+
+  - story: sad path with help rejected
+    steps:
+      - intent: greet
+      - action: utter_greet
+      - intent: mood_unhappy
+      - action: utter_cheer_up
+      - intent: deny
+      - action: utter_goodbye
+
+  # Energy-related stories - make them distinct
+  - story: Energy alert with suggestions accepted
+    steps:
+      - intent: demande_alertes
+      - action: utter_energy_alert
+      - intent: affirm
+      - action: action_identify_most_consuming_device
+      - action: utter_saving_suggestions
+
+  - story: Energy alert rejected
+    steps:
+      - intent: demande_alertes
+      - action: utter_energy_alert
+      - intent: deny
+      - action: utter_goodbye
+
+  # Other distinct stories
+  - story: bot information
+    steps:
+      - intent: bot_challenge
+      - action: utter_iamabot
+
+  - story: positive conversation end
+    steps:
+      - intent: affirm
+      - action: utter_happy
+      - intent: goodbye
+      - action: utter_goodbye

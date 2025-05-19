@@ -1,0 +1,39 @@
+**/.rasa
+**/models/archive
+**/tests
+**/coverage
+**/.github
+
+# Cache
+**/.ruff_cache
+**/.mypy_cache
+**/.pytest_cache
+
+# Fichiers temporaires
+**/tmp/*
+**/data/training_data.json
+
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Environnements virtuels
+**/venv
+**/env
+**/.venv
+
+# Fichiers de configuration locale
+**/.env
+**/local_settings.py
+
+# Logs et dumps
+**/*.log
+**/*.sqlite3
+
+data/*
+!data/training_data.json
+
+venv/
+.venv/

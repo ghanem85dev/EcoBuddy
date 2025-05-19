@@ -11,7 +11,7 @@ import mdp from "../../assets/mdp.png"; // Ajout de l'image
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useContext(AuthContext);
+  const { login,role } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // États pour la réinitialisation de mot de passe
@@ -27,18 +27,18 @@ const Login = () => {
     try {
       const response = await axios.post("http://localhost:8000/auth/login", { email, password });
       login(response.data.access_token);
-
       localStorage.setItem("token", response.data.access_token);
-
+  
       alert("Connexion réussie !");
-      console.log(response.data.role)
-      if(response.data.role=="admin"){
+      
+      // Correction ici - utiliser response.data.role directement
+      if(response.data.user.role === "admin") {  // <-- Changé de response.data.user.role à response.data.role
         navigate(`/admin/dashboard`);
-      }else if(response.data.role=="entreprise"){
-        navigate(`/dashboard/entreprise`);
+      } else if(response.data.role === "entreprise") {
+        navigate(`/entreprise/dashboard`);
+      } else {
+        navigate(`/particulier/dashboard`);
       }
-      else{
-      navigate(`/particulier/dashboard/${response.data.id}`);}
     } catch (error) {
       alert("Erreur de connexion !");
     }
@@ -89,15 +89,13 @@ const Login = () => {
         if (data.access_token) {
           login(data.access_token);
           alert("Connexion réussie !");
-          if(data.role=="admin"){
+          if(data.user.role === "admin") {  // <-- Doit être data.role
             navigate(`/admin/dashboard`);
-          }else if(data.role=="entreprise"){
-            navigate(`/dashboard/entreprise`);
+          } else if(data.user.role === "entreprise") {  // <-- Doit être data.role
+            navigate(`/entreprise/dashboard`);
+          } else {
+            navigate(`/particulier/dashboard`);
           }
-          else{
-          navigate(`/particulier/dashboard/${data.id}`);}
-        } else {
-          alert("Veuillez créer un compte !");
         }
       })
       .catch((error) => {
@@ -122,15 +120,14 @@ const Login = () => {
               if (data.access_token) {
                 login(data.access_token);
                 alert("Connexion réussie !");
-                if(data.role=="admin"){
+                console.log(data.user.role)
+                if(data.user.role === "admin") {  // <-- Doit être data.role
                   navigate(`/admin/dashboard`);
-                }else if(data.role=="entreprise"){
-                  navigate(`/dashboard/entreprise`);
+                } else if(data.user.role === "entreprise") {  // <-- Doit être data.role
+                  navigate(`/entreprise/dashboard`);
+                } else {
+                  navigate(`/particulier/dashboard`);
                 }
-                else{
-                navigate(`/particulier/dashboard`);}
-              } else {
-                alert("Veuillez créer un compte !");
               }
             })
             .catch((error) => console.error("Erreur de connexion Facebook:", error));

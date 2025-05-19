@@ -1,0 +1,70 @@
+version: "3.1"
+
+rules:
+  - rule: Dire au revoir quand l'utilisateur dit au revoir
+    steps:
+      - intent: goodbye
+      - action: utter_goodbye
+
+  - rule: Répondre à la question "Es-tu un bot ?"
+    steps:
+      - intent: bot_challenge
+      - action: utter_iamabot
+
+  - rule: Réagir à une demande d'économie d'énergie
+    steps:
+      - intent: demande_conseils
+      - action: utter_saving_suggestions
+
+  - rule: Fournir une alerte en cas de surconsommation
+    steps:
+      - intent: demande_alertes
+      - action: utter_energy_alert
+
+  - rule: Récompenser avec des éco-points
+    steps:
+      - intent: demander_eco_points
+      - action: utter_eco_points
+
+
+  - rule: Répondre à la question sur le site le plus consommateur
+    steps:
+      - intent: ask_most_consuming_site
+      - action: action_identify_most_consuming_site
+
+  - rule: Répondre à la question sur le site le moins consommateur  
+    steps:
+      - intent: ask_least_consuming_site
+      - action: action_identify_least_consuming_site
+
+  - rule: Répondre à la question sur l'appareil le plus consommateur
+    steps:
+      - intent: ask_most_consuming_device
+      - action: action_identify_most_consuming_device
+
+  - rule: Répondre à la question sur l'appareil le moins consommateur
+    steps:
+      - intent: ask_least_consuming_device  
+      - action: action_identify_least_consuming_device
+  
+  - rule: Show consumption info
+    steps:
+       - intent: demande_consommation
+       - action: action_get_current_month_consumption
+  - rule: Gestion des requêtes approximatives
+    steps:
+    - intent: nlu_fallback
+    - action: action_handle_approximate
+    - active_loop: null
+
+  - rule: Clarification contextuelle
+    steps:
+    - intent: demande_incomplete
+    - action: utter_ask_clarification
+    - active_loop: clarification_form
+  - rule: Gestion requêtes combinées
+    steps:
+    - intent: ask_combined
+    - action: action_handle_combined_request  # Changé ici
+    - slot_was_set:
+      - combined_query: true

@@ -1,0 +1,167 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - mood_great
+  - mood_unhappy
+  - bot_challenge
+  - demande_conseils
+  - demande_alertes
+  - demander_eco_points
+  - demande_consommation
+  - ask_most_consuming_site
+  - ask_least_consuming_site
+  - ask_most_consuming_device
+  - ask_least_consuming_device
+  - demande_incomplete 
+  - ask_combined 
+  - both_requests
+
+responses:
+  utter_greet:
+    - text: "Hey! How are you?"
+    - text: "Salut ! Comment ça va ? 😊"
+    - text: "Hello, ravi de te revoir !"
+    - text: "Coucou ! Tout va bien de ton côté ?"
+    - text: "Bonjour ! Prêt à discuter ?"
+
+
+  utter_cheer_up:
+    - text: "Here is something to cheer you up:"
+      image: "https://i.imgur.com/nGF1K8f.jpg"
+
+  utter_did_that_help:
+    - text: "Est-ce que cela vous a aidé ?"
+    - text: "Ces informations vous sont-elles utiles ?"
+    - text: "Souhaitez-vous plus de détails sur votre consommation ?"
+    - text: "Cela répond-il à votre question concernant la gestion énergétique ?"
+    - text: "Avez-vous trouvé cela clair et utile ?"
+
+  utter_happy:
+    - text: "Parfait, continuez comme ça !"
+    - text: "Super ! Vous êtes sur la bonne voie."
+    - text: "Génial, votre consommation est bien maîtrisée !"
+    - text: "Bravo ! Continuez vos efforts pour économiser l'énergie."
+    - text: "Excellent ! N'hésitez pas à consulter vos statistiques pour suivre vos progrès."
+
+  utter_goodbye:
+    - text: "À bientôt ! Prenez soin de votre consommation 😊"
+    - text: "Au revoir ! N'oubliez pas de suivre vos économies d'énergie."
+    - text: "À la prochaine ! Continuez à optimiser votre consommation."
+    - text: "Merci de votre visite ! Revenez quand vous voulez."
+    - text: "Bonne journée ! Ensemble, réduisons notre impact énergétique."
+
+  utter_iamabot:
+    - text: "Je suis un assistant virtuel, prêt à vous aider à mieux gérer votre énergie ⚡"
+    - text: "Je suis un bot intelligent, ici pour vous accompagner dans la réduction de votre consommation énergétique."
+    - text: "Assistant MyEnergieHub à votre service ! Posez-moi vos questions sur vos habitudes de consommation."
+
+  utter_eco_points:
+    - text: "Vous avez gagné 10 éco-points en débranchant vos appareils inutilisés. Continuez ainsi ! 🌱"
+    - text: "Bravo ! Vous venez d'économiser de l'énergie et de gagner des points. Souhaitez-vous voir vos récompenses disponibles ?"
+
+  utter_energy_alert:
+    - text: "⚠️ Attention, vous risquez de dépasser votre budget ce mois-ci. Souhaitez-vous un plan pour rééquilibrer ?"
+    - text: "Votre consommation a brusquement augmenté. Un appareil défectueux pourrait être en cause."
+
+  utter_saving_suggestions:
+    - text: "En remplaçant vos ampoules par des LED, vous pourriez économiser jusqu'à 30 € par an."
+    - text: "Installer un thermostat intelligent peut réduire vos factures de chauffage de 10 à 15 %."
+    - text: "Souhaitez-vous une simulation personnalisée selon vos habitudes ?"
+    - text: "Saviez-vous qu'en baissant votre chauffage de 1°C, vous économisez jusqu'à 7 % d'énergie ?"
+    - text: "Le saviez-vous ? Les appareils en veille consomment jusqu'à 10 % de votre facture électrique."
+
+  # utter_consumption_info:
+  #   - text: "Votre consommation ce mois-ci est de {consumption} kWh."
+  #   - text: "Selon nos données, vous avez consommé {consumption} kWh ce mois."
+  #   - text: "Voici votre consommation actuelle : {consumption} kWh."
+  #   - text: "Ce mois-ci, vous avez utilisé {consumption} kWh d'énergie."
+  utter_ask_clarification:
+    - text: "Pourriez-vous préciser votre demande ?"
+  
+  
+  utter_combined_response:
+    - text: "📊 Voici les informations demandées :\n• Consommation: {consumption}\n• Appareil énergivore: {device}"
+      buttons:
+      - title: "Détails"
+        payload: "/details"
+      - title: "Conseils" 
+        payload: "/tips"
+  
+  utter_acknowledge_combined:
+    - text: "Je vais vous fournir ces deux informations ensemble..."
+
+actions:
+  - action_handle_combined_request
+  - action_handle_approximate
+  - action_get_consumption 
+  - action_calculate_carbon_footprint
+  - action_get_current_month_consumption  # Changed from action_get_consumption
+  - action_identify_most_consuming_device
+  - action_identify_least_consuming_device
+  - action_identify_most_consuming_site
+  - action_identify_least_consuming_site
+  - action_get_consumption_by_category
+  - action_get_historical_consumption
+  - action_compare_consumption
+  - action_provide_saving_tips
+  - action_suggest_device_optimization
+  - action_set_period_slot
+  - utter_greet
+  - utter_cheer_up
+  - utter_did_that_help
+  - utter_happy
+  - utter_goodbye
+  - utter_iamabot
+  - utter_eco_points
+  - utter_energy_alert
+  - utter_saving_suggestions
+  - utter_consumption_info
+forms:
+  clarification_form:  # Ajouté
+    required_slots:
+      - clarification_type
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
+
+slots:
+  user_id:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  clarification_type:
+    type: text
+    mappings:
+    - type: from_text
+  combined_query:
+    type: bool
+    initial_value: false
+    influence_conversation: true
+    mappings:
+    - type: custom
+  
+  current_consumption:
+    type: float
+    influence_conversation: true
+    mappings:
+    - type: custom
+    min_value: 0
+    max_value: 10000
+  
+  start_date:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom
+  
+  end_date:
+    type: text
+    influence_conversation: false
+    mappings:
+    - type: custom

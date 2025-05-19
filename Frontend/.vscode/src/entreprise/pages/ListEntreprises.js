@@ -1,408 +1,397 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineFilePdf, AiOutlineCheck, AiOutlineClockCircle, AiOutlineCloseCircle } from "react-icons/ai";
-import { FaBuilding } from "react-icons/fa";
-import { motion } from "framer-motion";
-import entrepriseImage from "../../assets/entreprise.png";
-import { PiBuilding } from "react-icons/pi";
-import { useTheme } from "../../commun/context/ThemeContext";
+import React, { useState, useEffect, useContext } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import EntrepriseCard from "../../entreprise/components/EntrepriseCard";
+import { FiFilter, FiRefreshCw, FiAlertCircle, FiPlus, FiSearch, FiX } from "react-icons/fi";
 import { AuthContext } from "../../commun/context/AuthContext";
+import AddEntreprise from "./AddEntreprise";
+import { useLocation } from "react-router-dom";
+import EditEntreprise from "../components/EditEntreprise"; // Nouveau composant à créer
+import { useNavigate } from "react-router-dom";
 
-const EntreprisesList = () => {
+
+const ListEntreprises = () => {
   const { idUser } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [entreprises, setEntreprises] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [secteurs, setSecteurs] = useState([]);
-  const [loadingSecteurs, setLoadingSecteurs] = useState(false);
-  const [newEntreprise, setNewEntreprise] = useState({ 
-    nom: '', 
-    taille: '', 
-    secteur_id: '', 
-    certificat_propriete: null 
+  const location = useLocation();
+  const [state, setState] = useState({
+    entreprises: [],
+    loading: true,
+    error: null,
+    filter: "all",
+    refresh: false,
+    searchQuery: ""
   });
-  const [showForm, setShowForm] = useState(false);
-  const [editingEntreprise, setEditingEntreprise] = useState(null);
-  const { theme } = useTheme();
 
-  // Styles dynamiques en fonction du thème
-  const bgColor = theme === "dark" ? "bg-[#08112F] text-white" : "bg-white text-[#0078B8]";
-  const cardBgColor = theme === "dark" ? "bg-[#5A77DF] text-white" : "bg-[#f0faff] text-[#0078B8]";
-  const buttonBg = theme === "dark" ? "bg-[#5A77DF]" : "bg-[#0078B8]";
+  const navigate = useNavigate();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedEntreprise, setSelectedEntreprise] = useState(null);
+  const [formData, setFormData] = useState({
+    entreprise: {
+      nom: "",
+      taille: "",
+      secteur_id: "",
+      certificat_propriete: null,
+      certificat_propriete_nom: ""
+    },
+    site: {
+      nom: "",
+      adresse: "",
+      latitude: "",
+      longitude: "",
+      idCategorieSite: "",
+      certificat_propriete: null,
+      certificat_propriete_nom: ""
+    }
+  });
 
+  // Restaurer les données au montage si on revient de la carte
   useEffect(() => {
-    const fetchSecteurs = async () => {
-      setLoadingSecteurs(true);
-      try {
-        const response = await fetch('http://localhost:8000/secteurs');
-        if (response.ok) {
-          const data = await response.json();
-          setSecteurs(data);
+    const savedData = localStorage.getItem("entrepriseFormData");
+    const coordinates = localStorage.getItem("coordinates");
+    
+    if (savedData && location.state?.fromMap) {
+      const parsedData = JSON.parse(savedData);
+      const parsedCoords = JSON.parse(coordinates || '{}');
+      
+      setFormData(prev => ({
+        entreprise: {
+          ...prev.entreprise,
+          ...parsedData.entreprise
+        },
+        site: {
+          ...prev.site,
+          ...parsedData.site,
+          latitude: parsedCoords.lat || 0,
+          longitude: parsedCoords.lng || 0
         }
-      } catch (error) {
-        console.error('Error fetching secteurs:', error);
-      } finally {
-        setLoadingSecteurs(false);
-      }
-    };
-    fetchSecteurs();
-  }, []);
-
-  // Récupérer la liste des entreprises
-  const fetchEntreprises = async () => {
-    const userId = idUser;
-    if (!userId) {
-      setError('ID utilisateur manquant');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      console.log(`Fetching entreprises for user ${userId}`);
-      const response = await fetch(`http://localhost:8000/entreprises/user/${idUser}`);
+      }));
       
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la récupération des entreprises');
-      }
-
-      const data = await response.json();
-      console.log('Data received:', data);
-      setEntreprises(data);
-    } catch (error) {
-      console.error('Fetch error:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
+      // Ouvrir automatiquement le modal si on revient de la carte
+      setShowAddModal(true);
     }
-  };
+  }, [location.state]);
 
   useEffect(() => {
-    fetchEntreprises();
-  }, [idUser]);
+    if (idUser) {
+      fetchData();
+    }
+  }, [idUser, state.refresh]);
 
-  // Grouper les entreprises par statut
-  const approvedEntreprises = entreprises.filter((e) => e.statut_approbation === "approve");
-  const pendingEntreprises = entreprises.filter((e) => e.statut_approbation === "en_attente");
-  const rejectedEntreprises = entreprises.filter((e) => e.statut_approbation === "non_approve");
-
-  // Supprimer une entreprise
-  const handleDelete = async (idEntreprise) => {
-    if (window.confirm('Voulez-vous supprimer cette entreprise ?')) {
-      try {
-        const response = await fetch(`http://localhost:8000/entreprises/${idEntreprise}`, { 
-          method: 'DELETE' 
-        });
-        if (!response.ok) throw new Error('Erreur lors de la suppression');
-
-        setEntreprises((prev) => prev.filter((e) => e.idEntreprise !== idEntreprise));
-      } catch (error) {
-        setError(error.message);
-      }
+  const fetchData = async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await axios.get(`http://localhost:8000/entreprises/user/${idUser}`);
+      setState(prev => ({ ...prev, entreprises: response.data, loading: false }));
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        error: error.response?.data?.detail || error.message,
+        loading: false
+      }));
     }
   };
 
-  // Modifier une entreprise
-  const handleModify = (entreprise) => {
-    setEditingEntreprise(entreprise);
-    setNewEntreprise({
-      nom: entreprise.nom,
-      taille: entreprise.taille,
-      secteur_id: entreprise.secteur_id,
-      certificat_propriete: entreprise.certificat_propriete,
+  const getStatusCounts = () => {
+    const counts = {
+      all: state.entreprises.length,
+      approuvée: 0,
+      rejetée: 0,
+      en_attente: 0
+    };
+
+    state.entreprises.forEach(ent => {
+      const status = ent.statut_approbation?.toLowerCase();
+      if (status === 'approve') counts.approuvée++;
+      else if (status === 'non_approve') counts.rejetée++;
+      else if (status === 'en_attente') counts.en_attente++;
     });
-    setShowForm(true);
+
+    return [
+      { value: "all", label: "Toutes", count: counts.all },
+      { value: "approve", label: "Approuvées", count: counts.approuvée },
+      { value: "non_approve", label: "Rejetées", count: counts.rejetée },
+      { value: "en_attente", label: "En attente", count: counts.en_attente }
+    ];
   };
 
-  // Ajouter ou mettre à jour une entreprise
-  const handleAddOrUpdateEntreprise = async () => {
-    if (!newEntreprise.nom || !newEntreprise.taille || !newEntreprise.secteur_id) {
-      setError("Tous les champs sont requis.");
-      return;
-    }
-
-    try {
-      const userId = idUser;
-      let url = `http://localhost:8000/entreprises`;
-      let method = "POST";
-
-      if (editingEntreprise) {
-        url = `http://localhost:8000/entreprises/${editingEntreprise.idEntreprise}`;
-        method = "PUT";
-      }
-
-      const formData = new FormData();
-      formData.append("nom", newEntreprise.nom);
-      formData.append("taille", newEntreprise.taille);
-      formData.append("secteur_id", newEntreprise.secteur_id);
-      formData.append("user_id", userId);
-      if (newEntreprise.certificat_propriete) {
-        formData.append("certificat_propriete", newEntreprise.certificat_propriete);
-      }
-
-      const response = await fetch(url, {
-        method,
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error(`Erreur lors de ${editingEntreprise ? 'la modification' : "l'ajout"}`);
-
-      fetchEntreprises();
-      setNewEntreprise({ nom: '', taille: '', secteur_id: '', certificat_propriete: null });
-      setEditingEntreprise(null);
-      setShowForm(false);
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleEdit = (entreprise) => {
+    setSelectedEntreprise(entreprise);
+    setShowEditModal(true);
   };
 
-  // Gérer le téléchargement du fichier PDF
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setNewEntreprise({ ...newEntreprise, certificat_propriete: file });
-    } else {
-      setError("Veuillez sélectionner un fichier PDF valide.");
-    }
-  };
-
-  // Télécharger le certificat de propriété
-  const handleDownloadCertificat = async (idEntreprise) => {
-    try {
-      const response = await fetch(`http://localhost:8000/entreprises/certificat/${idEntreprise}`);
-      if (!response.ok) throw new Error('Erreur lors du téléchargement du certificat');
+  const handleDelete = async (entrepriseId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette entreprise ?")) {
+      try {
   
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "certificat_propriete.pdf";
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      setError(error.message);
+          const response = await fetch(`http://localhost:8000/entreprises/${entrepriseId}`, { 
+            method: 'DELETE' 
+          })
+          if (!response.ok) throw new Error('Erreur lors de la suppression');
+        setState(prev => ({ ...prev, refresh: !prev.refresh }));
+      } catch (error) {
+        console.error("Erreur lors de la suppression:", error);
+        alert("Erreur lors de la suppression de l'entreprise");
+      }
     }
   };
 
-  // Naviguer vers la liste des sites pour une entreprise
-  const handleViewSites = (idEntreprise) => {
-    navigate(`/listSites/${idEntreprise}`);
+  const handleDownloadCertificat = async (entrepriseId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/entreprises/certificat/${entrepriseId}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `certificat_propriete_${entrepriseId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        alert("Certificat non disponible");
+      }
+    } catch (error) {
+      console.error("Erreur lors du téléchargement:", error);
+      alert("Erreur lors du téléchargement");
+    }
   };
+
+  const statusFilters = getStatusCounts();
+
+  const filteredEntreprises = state.entreprises.filter(ent => {
+    const matchesFilter = state.filter === "all" || ent.statut_approbation?.toLowerCase() === state.filter;
+    const matchesSearch = ent.nom?.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
+                         ent.secteur?.nom?.toLowerCase().includes(state.searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  if (state.loading || !idUser) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="text-gray-500 mb-4"
+        >
+          <FiRefreshCw size={32} />
+        </motion.div>
+        <p className="text-gray-400">Chargement des entreprises...</p>
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="bg-white rounded-xl p-6 max-w-md mx-auto mt-10 text-center shadow-sm"
+      >
+        <div className="text-red-500 mb-4">
+          <FiAlertCircle size={48} className="mx-auto" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Erreur de chargement</h3>
+        <p className="text-gray-600 mb-6">{state.error}</p>
+        <button
+          onClick={() => setState(prev => ({ ...prev, refresh: !prev.refresh }))}
+          className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+        >
+          <FiRefreshCw />
+          Réessayer
+        </button>
+      </motion.div>
+    );
+  }
 
   return (
-    <section className={`${bgColor} min-h-screen p-10`}>
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Illustration - version agrandie */}
-        <div className="flex items-center justify-center mt-10">
-          <motion.img
-            src={entrepriseImage}
-            alt="Illustration entreprise"
-            className="w-full md:w-3/4"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          />
-        </div>
-
-        {/* Liste des entreprises */}
-        <div>
-        <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-3xl font-bold text-black mb-6 text-center md:text-left"  // Changé de text-[#0078B8] à text-black
-          >
-            Vos Entreprises
-          </motion.h1>
-
-          <div className="flex justify-center md:justify-start mb-6">
-            <motion.button
-              onClick={() => navigate("/entreprise/addEntreprise")}
-              className={`${buttonBg} text-white py-2 px-6 rounded-lg hover:bg-[#0055A4] transition-all`}
-              whileTap={{ scale: 0.95 }}
-            >
-              Ajouter une entreprise
-            </motion.button>
-          </div>
-
-          {/* Entreprises approuvées */}
-          <div className="mb-8">
-            <div className="space-y-4">
-              {entreprises.map((entreprise) => (
-                <EntrepriseCard
-                  key={entreprise.idEntreprise}
-                  entreprise={entreprise}
-                  handleModify={handleModify}
-                  handleDelete={handleDelete}
-                  handleDownloadCertificat={handleDownloadCertificat}
-                  handleViewSites={handleViewSites}
-                  cardBgColor={cardBgColor}
-                />
-              ))}
-            </div>
-          </div>
-
-        
-        </div>
-      </div>
-
-      {/* Pop-up d'ajout/modification */}
-      {showForm && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-2xl font-semibold text-[#0078B8] mb-4">
-              {editingEntreprise ? 'Modifier l\'entreprise' : 'Ajouter une entreprise'}
-            </h3>
-            
-            <input
-              type="text"
-              placeholder="Nom de l'entreprise"
-              value={newEntreprise.nom}
-              onChange={(e) => setNewEntreprise({ ...newEntreprise, nom: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
+    <div className="relative">
+      <AnimatePresence>
+        {showAddModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
+              onClick={() => setShowAddModal(false)}
             />
             
-            <select
-              value={newEntreprise.taille}
-              onChange={(e) => setNewEntreprise({ ...newEntreprise, taille: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed inset-0 flex items-center justify-center p-4 z-50"
             >
-              <option value="">Sélectionnez la taille</option>
-              <option value="petite">Petite (1-50 employés)</option>
-              <option value="moyenne">Moyenne (51-250 employés)</option>
-              <option value="grande">Grande (250+ employés)</option>
-            </select>
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-50"
+                >
+                  <FiX size={24} />
+                </button>
+                
+                <AddEntreprise 
+  initialFormData={formData}
+  onSuccess={() => {
+    setShowAddModal(false);
+    setState(prev => ({ ...prev, refresh: !prev.refresh }));
+    // Réinitialiser le formData après succès
+    setFormData({
+      entreprise: {
+        nom: "",
+        taille: "",
+        secteur_id: "",
+        certificat_propriete: null,
+        certificat_propriete_nom: ""
+      },
+      site: {
+        nom: "",
+        adresse: "",
+        latitude: "",
+        longitude: "",
+        idCategorieSite: "",
+        certificat_propriete: null,
+        certificat_propriete_nom: ""
+      }
+    });
+  }} 
+  onClose={() => {setShowAddModal(false);
+  navigate('/entreprise/entreprises')}}
+/>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Modal d'édition */}
+      <AnimatePresence>
+        {showEditModal && selectedEntreprise && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
+              onClick={() => setShowEditModal(false)}
+            />
             
-            <select
-              value={newEntreprise.secteur_id}
-              onChange={(e) => setNewEntreprise({ ...newEntreprise, secteur_id: e.target.value })}
-              className="mb-4 p-2 w-full border border-gray-300 rounded-md"
-              disabled={loadingSecteurs}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed inset-0 flex items-center justify-center p-4 z-50"
             >
-              <option value="">Sélectionnez un secteur...</option>
-              {secteurs.map(secteur => (
-                <option key={secteur.idSecteur} value={secteur.idSecteur}>
-                  {secteur.nom}
-                </option>
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-50"
+                >
+                  <FiX size={24} />
+                </button>
+                
+                <EditEntreprise 
+                  entreprise={selectedEntreprise}
+                  onSuccess={() => {
+                    setShowEditModal(false);
+                    setState(prev => ({ ...prev, refresh: !prev.refresh }));
+                  }} 
+                  onClose={() => setShowEditModal(false)}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
+              {statusFilters.map(({ value, label, count }) => (
+                <button
+                  key={value}
+                  onClick={() => setState(prev => ({ ...prev, filter: value }))}
+                  className={`flex items-center gap-2 text-sm ${
+                    state.filter === value ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <span>{label}</span>
+                  {count > 0 && (
+                    <span className="bg-gray-200 px-2 py-0.5 rounded-full text-xs">
+                      {count}
+                    </span>
+                  )}
+                </button>
               ))}
-            </select>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Certificat de propriété (PDF)
-                {editingEntreprise?.certificat_propriete_nom && (
-                  <span className="ml-2 text-green-600">
-                    Fichier actuel: {editingEntreprise.certificat_propriete_nom}
-                  </span>
-                )}
-              </label>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                className="mt-1 p-2 w-full border border-gray-300 rounded-md"
-              />
-            </div>
-
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
-            <div className="flex gap-4 mt-4">
-              <button 
-                onClick={handleAddOrUpdateEntreprise} 
-                className="bg-[#0078B8] text-white py-2 px-4 rounded-md"
-              >
-                {editingEntreprise ? 'Modifier' : 'Ajouter'}
-              </button>
-              <button
-                onClick={() => {
-                  setNewEntreprise({ nom: '', taille: '', secteur_id: '', certificat_propriete: null });
-                  setEditingEntreprise(null);
-                  setShowForm(false);
-                }}
-                className="bg-gray-500 text-white py-2 px-4 rounded-md"
-              >
-                Annuler
-              </button>
             </div>
           </div>
-        </div>
-      )}
-    </section>
-  );
-};
 
-// Composant pour afficher une carte d'entreprise
-const EntrepriseCard = ({ entreprise, handleModify, handleDelete, handleDownloadCertificat, handleViewSites, cardBgColor }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`${cardBgColor} p-5 rounded-xl shadow-lg border border-gray-300 hover:shadow-2xl transition-all flex justify-between items-center`}
-    >
-      <div className="flex items-center gap-4">
-        <FaBuilding className="text-3xl text-[#0078B8]" />
-        <div>
-          <p className="text-lg font-semibold">{entreprise.nom}</p>
-          <p className="text-sm text-[#0055A4]">Taille: {entreprise.taille}</p>
-          <p className="text-sm text-[#0055A4]">Secteur ID: {entreprise.secteur_id}</p>
-          {entreprise.statut_approbation === "approve" ? (
-            <div className="flex items-center gap-1 text-green-600">
-              <AiOutlineCheck /> Approuvé
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={state.searchQuery}
+                onChange={(e) => setState(prev => ({ ...prev, searchQuery: e.target.value }))}
+                className="pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 w-full"
+              />
             </div>
-          ) : entreprise.statut_approbation === "non_approve" ? (
-            <div className="flex items-center gap-1 text-red-600">
-              <AiOutlineCloseCircle /> Non approuvé
-            </div>
+            
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-black hover:bg-black text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <FiPlus size={18} />
+              <span>Ajouter</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {filteredEntreprises.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300"
+            >
+              <p className="text-gray-500">
+                {state.searchQuery 
+                  ? "Aucun résultat trouvé pour votre recherche"
+                  : "Aucune entreprise trouvée"}
+              </p>
+            </motion.div>
           ) : (
-            <div className="flex items-center gap-1 text-yellow-600">
-              <AiOutlineClockCircle /> En attente
-            </div>
+            <>
+              <div className="mb-4 text-sm text-gray-500">
+                {filteredEntreprises.length} entreprise(s) trouvée(s)
+                {state.filter !== "all" && ` (filtrée(s) par statut "${state.filter}")`}
+              </div>
+              
+              <motion.div 
+                layout
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              >
+                <AnimatePresence>
+                  {filteredEntreprises.map(entreprise => (
+                    <EntrepriseCard 
+                      key={entreprise.idEntreprise} 
+                      entreprise={entreprise}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onDownloadCertificat={handleDownloadCertificat}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </>
           )}
         </div>
       </div>
-
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => handleViewSites(entreprise.idEntreprise)}
-          className="text-[#0078B8] p-2 rounded-full hover:bg-[#0078B8] hover:text-white transition-all"
-        >
-          <PiBuilding className="text-2xl" />
-        </button>
-
-        <button
-          onClick={() => handleDownloadCertificat(entreprise.idEntreprise)}
-          className={`text-[#0078B8] p-2 rounded-full hover:bg-[#0078B8] hover:text-white transition-all ${
-            !entreprise.certificat_propriete_nom ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={!entreprise.certificat_propriete_nom}
-        >
-          <AiOutlineFilePdf className="text-2xl" />
-        </button>
-
-        <button
-          onClick={() => handleModify(entreprise)}
-          className={`text-[#0078B8] p-2 rounded-full hover:bg-[#0078B8] hover:text-white transition-all ${
-            entreprise.statut_approbation === "non_approve" ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={entreprise.statut_approbation === "non_approve"}
-        >
-          <AiOutlineEdit className="text-xl" />
-        </button>
-
-        <button
-          onClick={() => handleDelete(entreprise.idEntreprise)}
-          className="text-red-600 p-2 rounded-full hover:bg-red-600 hover:text-white transition-all"
-        >
-          <AiOutlineDelete className="text-xl" />
-        </button>
-      </div>
-    </motion.div>
+    </div>
   );
 };
 
-export default EntreprisesList;
+export default ListEntreprises;

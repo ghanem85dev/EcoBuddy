@@ -1,4 +1,49 @@
-Backend/app/.env
-__pycache__/
-*.pyc
-Backend/app/database/database.py
+# === Fichiers sensibles ===
+**/.env                # Ignore TOUS les fichiers .env (partout dans le projet)
+Backend/app/.env       # Double protection spécifique
+
+# === Python ===
+**/__pycache__/        # Ignore tous les dossiers __pycache__
+*.py[cod]              # Fichiers compilés Python (.pyc, .pyo, .pyd)
+*.so                   # Extensions Python
+*.egg-info/            # Métadonnées pip
+.python-version
+
+# === Bases de données/Scripts ===
+Backend/app/database/database.py  # Fichier de config DB
+*.sqlite3              # Bases de données SQLite
+
+# === Environnements virtuels ===
+**/venv/               # Tous les venv
+**/.venv/
+Backend/chatbot/venv/  # Spécifique à Rasa
+Backend/chatbot/.rasa  # Cache Rasa
+Backend/chatbot/rasa-env  # Environnement Rasa
+
+venv/
+.rasa/
+.idea/
+*.swp
+*.swo
+
+Backend/chatbot/.rasa/
+Backend/chatbot/rasa-env/
+"Backend/chatbot/.rasa/" 
+"Backend/chatbot/rasa-env/" 
+**/alembic
+**/.rasa
+**/models/archive
+**/tests
+**/coverage
+
+
+**/.ruff_cache
+**/.mypy_cache
+**/.pytest_cache
+
+**/tmp/*
+**/data/training_data.json
+
+Backend/chatbot/models
+
+

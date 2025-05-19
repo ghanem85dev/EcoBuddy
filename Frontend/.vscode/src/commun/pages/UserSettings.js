@@ -103,7 +103,7 @@ console.log(idUser)
         setActivePage={setActivePage} collapsed={collapsed} setCollapsed={setCollapsed} />
             {/* Contenu Principal */}
             <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? "md:ml-[240px]" : "md:ml-0"}`}>
-            <Header collapsed={collapsed} setCollapsed={setCollapsed} user_id={user_id} />
+            <Header collapsed={collapsed} setCollapsed={setCollapsed} idUser={user_id} />
 
                 <div className="h-[calc(100vh-60px)] overflow-y-auto p-6 flex justify-center items-center">
                     <div className="grid grid-cols-1 md:grid-cols-2 w-full max-w-5xl bg-[#1a2e45] rounded-2xl shadow-lg overflow-hidden">
